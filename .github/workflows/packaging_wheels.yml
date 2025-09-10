@@ -144,12 +144,43 @@ jobs:
             mkdir -p ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
             echo "Test file in project root" > test-mount-check.txt
             ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+            which gcc g++ ccache
+            echo "CC=$CC CXX=$CXX"
+            ccache -s
+          CIBW_BEFORE_BUILD: |
+            echo "Container PWD: $(pwd)"
+            echo "CCACHE_DIR env var: $CCACHE_DIR"
+            echo "Checking if CCACHE_DIR exists as absolute path:"
+            ls -la "$CCACHE_DIR" || echo "CCACHE_DIR path not found"
+            echo "Checking if ccache dir exists in current directory:"
+            ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir not in current dir"
+            echo "Full filesystem check:"
+            find . -name "*ccache*" -type d 2>/dev/null || echo "no ccache dirs found anywhere"
+            ccache -s
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+            ccache -s
+            echo "ccache directory contents:"
+            find ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ -type f | head -10 || echo "no cache files found"
+            du -sh ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir missing"
+            auditwheel repair -w {dest_dir} {wheel}
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           path: wheelhouse/*.whl
           compression-level: 0
+      - name: Check final ccache state
+        if: always()
+        run: |
+          echo "Host PWD: $(pwd)"
+          echo "Checking ccache directory on host:"
+          ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir not found on host"
+          echo "Directory size:"
+          du -sh ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir missing"
+          echo "Cache files count:"
+          find ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ -type f | wc -l || echo "0"
+          echo "Host ccache stats (if available):"
+          CCACHE_DIR=ccache-${{ matrix.python }}-${{ matrix.platform.arch }} ccache -s || echo "ccache not available on host"
       - name: Save Build Cache
         if: always()  # Always save, even on failure
         uses: actions/cache/save@v4
