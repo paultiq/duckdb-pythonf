@@ -87,6 +87,12 @@ jobs:
             build-dir-${{ matrix.python }}-${{ runner.os }}-
       - name: Show ccache stats
         run: ccache -s
+      - name: Create ccache directory on host
+        run: |
+          mkdir -p ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+          echo "Created ccache directory on host at $(date)" > ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/host-created.txt
+          echo "Created ccache directory on host"
+          ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/
       - name: Checkout DuckDB
         shell: bash
         if: ${{ inputs.duckdb-sha }}
@@ -154,6 +160,8 @@ jobs:
             ls -la "$CCACHE_DIR" || echo "CCACHE_DIR path not found"
             echo "Checking if ccache dir exists in current directory:"
             ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir not in current dir"
+            echo "Verifying host-created placeholder file:"
+            cat ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/host-created.txt 2>/dev/null || echo "placeholder file not found - mount issue!"
             echo "Full filesystem check:"
             find . -name "*ccache*" -type d 2>/dev/null || echo "no ccache dirs found anywhere"
             ccache -s
