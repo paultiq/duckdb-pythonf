@@ -71,9 +71,11 @@ jobs:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0 
           submodules: true
-      - name: Setup ccache
-        run: |
-          sudo apt-get update && sudo apt-get install -y ccache
+      - name: Install ccache
+        uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: ccache
+          version: 1.0
       - name: Restore Build Cache
         uses: actions/cache/restore@v4
         with:
@@ -108,6 +110,20 @@ jobs:
           python-version: ${{
             fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
             }}
+
+      - name: Verify Python version
+        run: |
+          expected="${{ fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python] }}"
+          actual=$(python --version | cut -d' ' -f2)
+          echo "Expected: $expected, Actual: $actual"
+          if [[ "$expected" == "3.14t" && "$actual" =~ ^3\.14\. ]]; then
+            echo "Python 3.14t version check passed"
+          elif [[ "$actual" =~ ^$expected\. ]]; then
+            echo "Python version check passed"
+          else
+            echo "Python version mismatch!"
+            exit 1
+          fi
 
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
         uses: pypa/cibuildwheel@v3.0
