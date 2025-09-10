@@ -170,6 +170,9 @@ jobs:
             echo "ccache directory contents:"
             find ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ -type f | head -10 || echo "no cache files found"
             du -sh ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir missing"
+            echo "Creating test file from container..."
+            echo "Test file created at $(date)" > ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/test-from-container.txt
+            ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/
             auditwheel repair -w {dest_dir} {wheel}
       - name: Upload wheel
         uses: actions/upload-artifact@v4
