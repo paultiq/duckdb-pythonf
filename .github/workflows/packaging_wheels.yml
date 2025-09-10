@@ -130,7 +130,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_GHA_ENABLED=true SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER=sccache CMAKE_CXX_COMPILER_LAUNCHER=sccache
+          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_GHA_ENABLED=true SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }}
           CIBW_BUILD_VERBOSITY: 1
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             echo "Final sccache stats:"
