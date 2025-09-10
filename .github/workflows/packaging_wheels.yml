@@ -60,7 +60,10 @@ jobs:
       CIBW_TEST_COMMAND: >
         uv run python -c "import duckdb
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
-
+      CCACHE_DIR: >
+        /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+      CCACHE_MAXSIZE: 2G
+  
     steps:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v4
@@ -68,12 +71,6 @@ jobs:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0 
           submodules: true
-      - name: Setup ccache
-        run: |
-          sudo apt-get update && sudo apt-get install -y ccache
-          mkdir -p /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
-          echo "CCACHE_DIR=/tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}" >> $GITHUB_ENV
-          echo "CCACHE_MAXSIZE=2G" >> $GITHUB_ENV
       - name: Restore Build Cache
         uses: actions/cache/restore@v4
         with:
@@ -84,6 +81,8 @@ jobs:
           key: build-dir-${{ matrix.python }}-${{ runner.os }}
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
+      - name: Show ccache stats
+        run: ccache -s
       - name: Checkout DuckDB
         shell: bash
         if: ${{ inputs.duckdb-sha }}
