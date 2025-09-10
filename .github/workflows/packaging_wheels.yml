@@ -68,13 +68,19 @@ jobs:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0 
           submodules: true
+      - name: Setup ccache
+        run: |
+          sudo apt-get update && sudo apt-get install -y ccache
+          mkdir -p /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+          echo "CCACHE_DIR=/tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=2G" >> $GITHUB_ENV
       - name: Restore Build Cache
         uses: actions/cache/restore@v4
         with:
           path: |
             build/
             wheelhouse/
-            /tmp/ccache
+            /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
           key: build-dir-${{ matrix.python }}-${{ runner.os }}
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
@@ -120,5 +126,5 @@ jobs:
           path: |
             build/
             wheelhouse/
-            /tmp/ccache
+            /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
           key: build-dir-${{ matrix.python }}-${{ runner.os }}
