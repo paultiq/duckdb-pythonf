@@ -58,10 +58,9 @@ jobs:
         ls -la pylock.toml 2>/dev/null || echo "pylock.toml not created" &&
         echo "done"
       CIBW_TEST_COMMAND: >
-        uv run python -c "import duckdb
+        uv run python -c "import duckdb"
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
-      CCACHE_DIR: >
-        /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+      CCACHE_DIR: build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
       CCACHE_MAXSIZE: 2G
   
     steps:
@@ -82,7 +81,7 @@ jobs:
           path: |
             build/
             wheelhouse/
-            /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+            build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
           key: build-dir-${{ matrix.python }}-${{ runner.os }}
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
@@ -136,7 +135,10 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }}
+          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_DIR=build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_MAXSIZE=2G
+          CIBW_BEFORE_ALL_LINUX: |
+            yum install -y ccache || apt-get update && apt-get install -y ccache
+            mkdir -p build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
@@ -150,5 +152,5 @@ jobs:
           path: |
             build/
             wheelhouse/
-            /tmp/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+            build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
           key: build-dir-${{ matrix.python }}-${{ runner.os }}
