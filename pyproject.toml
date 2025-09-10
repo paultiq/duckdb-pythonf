@@ -385,9 +385,9 @@ enable = ["cpython-freethreading", "cpython-prerelease"]
 [tool.cibuildwheel.linux]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_CACHE_URL", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL"]
 before-build = [
-  "wget https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz",
-  "tar -zxf sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz",
-  "cp sccache-v0.10.0-x86_64-unknown-linux-musl/sccache /usr/bin"
+  "curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz | tar xz",
+  "cp sccache-v0.10.0-x86_64-unknown-linux-musl/sccache /usr/bin",
+  "which sccache"
 ]
 before-test = "sccache --show-stats"
 
