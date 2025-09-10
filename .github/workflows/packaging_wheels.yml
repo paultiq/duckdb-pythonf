@@ -76,7 +76,7 @@ jobs:
           path: |
             build/
             wheelhouse/
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}-b
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}-c
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
       - name: Checkout DuckDB
@@ -127,15 +127,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_GHA_ENABLED=true CC="sccache gcc" CXX="sccache g++"
-          CIBW_BEFORE_ALL_LINUX: |
-            curl -L https://github.com/mozilla/sccache/releases/download/v0.7.7/sccache-v0.7.7-x86_64-unknown-linux-musl.tar.gz | tar xz
-            chmod +x sccache-v0.7.7-x86_64-unknown-linux-musl/sccache
-            mv sccache-v0.7.7-x86_64-unknown-linux-musl/sccache /usr/local/bin/
-            echo "Verifying sccache installation"
-            which gcc g++ sccache
-            echo "CC=$CC CXX=$CXX"
-            sccache --show-stats
+          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_GHA_ENABLED=true SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} CC="sccache gcc" CXX="sccache g++"
           CIBW_BEFORE_BUILD: |
             echo "sccache status before build:"
             sccache --show-stats
@@ -161,4 +153,4 @@ jobs:
           path: |
             build/
             wheelhouse/
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}-b
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}-c
