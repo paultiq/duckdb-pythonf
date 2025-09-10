@@ -80,7 +80,7 @@ jobs:
             build/
             wheelhouse/
             /home/runner/.cache/cibuildwheel
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}-e
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}-
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
       - name: Checkout DuckDB
