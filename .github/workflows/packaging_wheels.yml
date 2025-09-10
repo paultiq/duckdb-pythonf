@@ -80,7 +80,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.8.16"
-          enable-cache: false
+          enable-cache: true
           cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
 
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
