@@ -47,6 +47,7 @@ jobs:
           - { minimal: true, platform: { arch: universal2 } }
     runs-on: ${{ matrix.platform.os }}
     env:
+      CCACHE_DIR: /tmp/ccache  
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
@@ -69,7 +70,7 @@ jobs:
           path: |
             build/
             wheelhouse/
-            ~/.ccache
+            /tmp/ccache
           key: build-dir-${{ matrix.python }}-${{ runner.os }}
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
