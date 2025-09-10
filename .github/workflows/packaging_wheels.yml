@@ -50,13 +50,8 @@ jobs:
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
-        pwd && ls -la &&
-        python --version && uv --version &&
-        echo "uv export" &&
-        uv export --only-group test --no-emit-project --output-file pylock.toml --directory /project --verbose 2>&1 || echo "Export failed with exit code $?" &&
-        echo "listing file" &&
-        ls -la pylock.toml 2>/dev/null || echo "pylock.toml not created" &&
-        echo "done"
+        uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
+        uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
         uv run python -c "import duckdb"
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
@@ -66,7 +61,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           ref: ${{ inputs.duckdb-python-sha }}
-          fetch-depth: 0 
+          fetch-depth: 0
           submodules: true
       - name: Setup sccache  # idea from https://github.com/pypa/cibuildwheel/issues/1030
         uses: mozilla-actions/sccache-action@v0.0.9
@@ -130,7 +125,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_GHA_ENABLED=true SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }}
+          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_GHA_ENABLED=on SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} ACTIONS_CACHE_URL=$ACTIONS_CACHE_URL ACTIONS_RUNTIME_TOKEN=$ACTIONS_RUNTIME_TOKEN
           CIBW_BUILD_VERBOSITY: 1
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             echo "Final sccache stats:"
