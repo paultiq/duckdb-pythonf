@@ -62,7 +62,7 @@ jobs:
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
       CCACHE_DIR: build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
       CCACHE_MAXSIZE: 2G
-  
+   
     steps:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v5
