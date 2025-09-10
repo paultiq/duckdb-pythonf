@@ -79,7 +79,7 @@ jobs:
             build/
             wheelhouse/
             /home/runner/.cache/cibuildwheel
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}-d
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}-e
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
       - name: Checkout DuckDB
@@ -105,7 +105,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.8.16"
-          enable-cache: true
+          enable-cache: false
           cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           python-version: ${{
             fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
@@ -155,4 +155,4 @@ jobs:
             build/
             wheelhouse/
             /home/runner/.cache/cibuildwheel
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}-d
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}-e
