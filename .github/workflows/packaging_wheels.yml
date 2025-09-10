@@ -51,7 +51,7 @@ jobs:
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
-        uv pip install -r pylock.toml
+        uv pip install -r {project}/pylock.toml
       CIBW_TEST_COMMAND: >
         uv run python -c "import duckdb
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs

@@ -63,6 +63,7 @@ defaults:
 jobs:
   build_sdist:
     name: Build an sdist and determine versions
+    if: ${{ github.event_name != 'pull_request' }}
     uses: ./.github/workflows/packaging_sdist.yml
     with:
       testsuite: all
