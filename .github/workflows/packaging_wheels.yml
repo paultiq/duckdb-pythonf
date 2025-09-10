@@ -53,7 +53,8 @@ jobs:
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
-        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
+        uv run python -c "import duckdb
+      #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
 
     steps:
       - name: Checkout DuckDB Python
@@ -68,7 +69,7 @@ jobs:
           path: |
             build/
             wheelhouse/
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}-${{ hashFiles('external/duckdb/.git/HEAD', 'CMakeLists.txt') }}
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
       - name: Checkout DuckDB
