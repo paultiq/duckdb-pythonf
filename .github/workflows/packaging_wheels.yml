@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp314 ]  # cp39, cp310, cp311, cp312, cp313, , cp314t 
+        python: [ cp313 ]  # cp39, cp310, cp311, cp312, cp314, cp314t 
         platform:
           #- { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
@@ -47,7 +47,6 @@ jobs:
           - { minimal: true, platform: { arch: universal2 } }
     runs-on: ${{ matrix.platform.os }}
     env:
-      CCACHE_DIR: /tmp/ccache  
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
@@ -69,8 +68,8 @@ jobs:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0 
           submodules: true
-      - name: Cache Build Directory
-        uses: actions/cache@v4
+      - name: Restore Build Cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             build/
@@ -114,3 +113,12 @@ jobs:
           name: wheel-${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           path: wheelhouse/*.whl
           compression-level: 0
+      - name: Save Build Cache
+        if: always()  # Always save, even on failure
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            build/
+            wheelhouse/
+            /tmp/ccache
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}
