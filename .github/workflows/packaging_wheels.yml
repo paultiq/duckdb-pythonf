@@ -60,7 +60,7 @@ jobs:
       CIBW_TEST_COMMAND: >
         uv run python -c "import duckdb"
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
-      CCACHE_DIR: ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+      CCACHE_DIR: build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
       CCACHE_MAXSIZE: 2G
    
     steps:
@@ -81,7 +81,6 @@ jobs:
           path: |
             build/
             wheelhouse/
-            ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
           key: build-dir-${{ matrix.python }}-${{ runner.os }}-b
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
@@ -89,10 +88,10 @@ jobs:
         run: ccache -s
       - name: Create ccache directory on host
         run: |
-          mkdir -p ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
-          echo "Created ccache directory on host at $(date)" > ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/host-created.txt
+          mkdir -p build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+          echo "Created ccache directory on host at $(date)" > build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/host-created.txt
           echo "Created ccache directory on host"
-          ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/
+          ls -la build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/
       - name: Checkout DuckDB
         shell: bash
         if: ${{ inputs.duckdb-sha }}
@@ -141,15 +140,15 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_DIR=ccache-${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_MAXSIZE=2G CC="ccache gcc" CXX="ccache g++" CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_DIR=build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_MAXSIZE=2G CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache
           CIBW_BEFORE_ALL_LINUX: |
             yum install -y ccache || apt-get update && apt-get install -y ccache
             pwd
             ls -la
             echo " ccache dir"
-            mkdir -p ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+            mkdir -p build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
             echo "Test file in project root" > test-mount-check.txt
-            ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
+            ls -la build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
             which gcc g++ ccache
             echo "CC=$CC CXX=$CXX"
             ccache -s
@@ -159,20 +158,20 @@ jobs:
             echo "Checking if CCACHE_DIR exists as absolute path:"
             ls -la "$CCACHE_DIR" || echo "CCACHE_DIR path not found"
             echo "Checking if ccache dir exists in current directory:"
-            ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir not in current dir"
+            ls -la build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir not in current dir"
             echo "Verifying host-created placeholder file:"
-            cat ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/host-created.txt 2>/dev/null || echo "placeholder file not found - mount issue!"
+            cat build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/host-created.txt 2>/dev/null || echo "placeholder file not found - mount issue!"
             echo "Full filesystem check:"
             find . -name "*ccache*" -type d 2>/dev/null || echo "no ccache dirs found anywhere"
             ccache -s
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             ccache -s
             echo "ccache directory contents:"
-            find ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ -type f | head -10 || echo "no cache files found"
-            du -sh ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir missing"
+            find build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ -type f | head -10 || echo "no cache files found"
+            du -sh build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir missing"
             echo " test file from container"
-            echo "Test file created at $(date)" > ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/test-from-container.txt
-            ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/
+            echo "Test file created at $(date)" > build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/test-from-container.txt
+            ls -la build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/
             auditwheel repair -w {dest_dir} {wheel}
       - name: Upload wheel
         uses: actions/upload-artifact@v4
@@ -185,13 +184,13 @@ jobs:
         run: |
           echo "Host PWD: $(pwd)"
           echo "Checking ccache directory on host:"
-          ls -la ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir not found on host"
+          ls -la build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir not found on host"
           echo "Directory size:"
-          du -sh ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir missing"
+          du -sh build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ || echo "ccache dir missing"
           echo "Cache files count:"
-          find ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ -type f | wc -l || echo "0"
+          find build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}/ -type f | wc -l || echo "0"
           echo "Host ccache stats (if available):"
-          CCACHE_DIR=ccache-${{ matrix.python }}-${{ matrix.platform.arch }} ccache -s || echo "ccache not available on host"
+          CCACHE_DIR=build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }} ccache -s || echo "ccache not available on host"
       - name: Save Build Cache
         if: always()  # Always save, even on failure
         uses: actions/cache/save@v4
@@ -199,5 +198,4 @@ jobs:
           path: |
             build/
             wheelhouse/
-            ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
           key: build-dir-${{ matrix.python }}-${{ runner.os }}-b
