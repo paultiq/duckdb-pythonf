@@ -135,7 +135,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_DIR=build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_MAXSIZE=2G
+          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_DIR=build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }} CCACHE_MAXSIZE=2G CC="ccache gcc" CXX="ccache g++"
           CIBW_BEFORE_ALL_LINUX: |
             yum install -y ccache || apt-get update && apt-get install -y ccache
             mkdir -p build/ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
