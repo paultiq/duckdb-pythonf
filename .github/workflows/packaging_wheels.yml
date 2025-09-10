@@ -82,7 +82,7 @@ jobs:
             build/
             wheelhouse/
             ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}-b
           restore-keys: |
             build-dir-${{ matrix.python }}-${{ runner.os }}-
       - name: Show ccache stats
@@ -197,4 +197,4 @@ jobs:
             build/
             wheelhouse/
             ccache-${{ matrix.python }}-${{ matrix.platform.arch }}
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}
+          key: build-dir-${{ matrix.python }}-${{ runner.os }}-b
