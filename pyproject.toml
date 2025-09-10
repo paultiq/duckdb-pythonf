@@ -383,19 +383,18 @@ manylinux-pypy_aarch64-image = "manylinux_2_28"
 enable = ["cpython-freethreading", "cpython-prerelease"]
 
 [tool.cibuildwheel.linux]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_CACHE_URL", "ACTIONS_RUNTIME_TOKEN"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_CACHE_URL", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL"]
 before-build = [
-  "curl -L https://github.com/mozilla/sccache/releases/download/v0.7.7/sccache-v0.7.7-x86_64-unknown-linux-musl.tar.gz | tar xz",
-  "chmod +x sccache-v0.7.7-x86_64-unknown-linux-musl/sccache",
-  "mv sccache-v0.7.7-x86_64-unknown-linux-musl/sccache /usr/local/bin/",
-  "which gcc g++ sccache",
-  "sccache --show-stats"
+  "wget https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz",
+  "tar -zxf sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz",
+  "cp sccache-v0.10.0-x86_64-unknown-linux-musl/sccache /usr/bin"
 ]
+before-test = "sccache --show-stats"
 
 [tool.cibuildwheel.macos]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_CACHE_URL", "ACTIONS_RUNTIME_TOKEN"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_CACHE_URL", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL"]
 before-build = ["brew install sccache"]
 
 [tool.cibuildwheel.windows]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_CACHE_URL", "ACTIONS_RUNTIME_TOKEN"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_CACHE_URL", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL"]
 before-build = ["choco install sccache"]
