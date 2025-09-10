@@ -46,9 +46,9 @@ all = [ # users can install duckdb with 'duckdb[all]', which will install this l
     "ipython", # used in duckdb.query_graph
     "fsspec",  # used in duckdb.filesystem
     "numpy",   # used in duckdb.experimental.spark and in duckdb.fetchnumpy()
-    "pandas",  # used for pandas dataframes all over the place
-    "pyarrow", # used for pyarrow support
-    "adbc_driver_manager", # for the adbc driver (TODO: this should live under the duckdb package)
+    "pandas; python_version < '3.14'",  # used for pandas dataframes all over the place
+    "pyarrow; python_version < '3.14'", # used for pyarrow support
+    "adbc_driver_manager; python_version < '3.14'", # for the adbc driver (TODO: this should live under the duckdb package)
 ]
 
 ######################################################################################################
@@ -229,20 +229,20 @@ test = [ # dependencies used for running tests
     "pytest-timeout",
     "mypy",
     "coverage",
-    "gcovr",
+    "gcovr; python_version < '3.14'",
     "gcsfs",
     "packaging",
-    "polars",
+    "polars; python_version < '3.14'",
     "psutil",
     "py4j",
     "pyotp",
-    "pyspark",
+    "pyspark; python_version < '3.14'",
     "pytz",
     "requests",
     "urllib3",
     "fsspec>=2022.11.0",
-    "pandas>=2.0.0",
-    "pyarrow>=18.0.0",
+    "pandas>=2.0.0; python_version < '3.14'",
+    "pyarrow>=18.0.0; python_version < '3.14'",
     "torch>=2.2.2; sys_platform != 'darwin' or platform_machine != 'x86_64' or python_version < '3.13'",
     "tensorflow==2.14.0; sys_platform == 'darwin' and python_version < '3.12'",
     "tensorflow-cpu>=2.14.0; sys_platform == 'linux' and platform_machine != 'aarch64' and python_version < '3.12'",
@@ -256,10 +256,10 @@ scripts = [ # dependencies used for running scripts
     "ipython",
     "ipywidgets",
     "numpy",
-    "pandas",
+    "pandas; python_version < '3.14'",
     "pcpp",
-    "polars",
-    "pyarrow",
+    "polars; python_version < '3.14'",
+    "pyarrow; python_version < '3.14'",
     "pytz"
 ]
 pypi = [ # dependencies used by the pypi cleanup script
