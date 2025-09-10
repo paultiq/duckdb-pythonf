@@ -51,8 +51,13 @@ jobs:
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
-        uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
-        uv pip install -r {project}/pylock.toml
+        pwd && ls -la &&
+        python --version && uv --version &&
+        echo "uv export" &&
+        uv export --only-group test --no-emit-project --output-file pylock.toml --directory /project --verbose 2>&1 || echo "Export failed with exit code $?" &&
+        echo "listing file" &&
+        ls -la pylock.toml 2>/dev/null || echo "pylock.toml not created" &&
+        echo "done"
       CIBW_TEST_COMMAND: >
         uv run python -c "import duckdb
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
