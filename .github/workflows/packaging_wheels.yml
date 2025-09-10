@@ -66,7 +66,7 @@ jobs:
   
     steps:
       - name: Checkout DuckDB Python
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0 
@@ -100,7 +100,13 @@ jobs:
       - name: Set OVERRIDE_GIT_DESCRIBE
         if: ${{ inputs.set-version != '' }}
         run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }} SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }}" >> $GITHUB_ENV
-
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{
+            fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
+            }}
+          allow-prereleases: true
       # Install Astral UV, which will be used as build-frontend for cibuildwheel
       - uses: astral-sh/setup-uv@v6
         with:
