@@ -244,7 +244,7 @@ test = [ # dependencies used for running tests
     "fsspec>=2022.11.0",
     "pandas>=2.0.0; python_version < '3.14'",
     "pyarrow>=18.0.0; python_version < '3.14'",
-    "torch>=2.2.2; sys_platform != 'darwin' or platform_machine != 'x86_64' or python_version < '3.13'",
+    "torch>=2.2.2; python_version < '3.14' and (sys_platform != 'darwin' or platform_machine != 'x86_64' or python_version < '3.13')",
     "tensorflow==2.14.0; sys_platform == 'darwin' and python_version < '3.12'",
     "tensorflow-cpu>=2.14.0; sys_platform == 'linux' and platform_machine != 'aarch64' and python_version < '3.12'",
     "tensorflow-cpu>=2.14.0; sys_platform == 'win32' and python_version < '3.12'",
