@@ -58,7 +58,7 @@ jobs:
       CIBW_TEST_COMMAND: >
         uv run python -c "import duckdb"
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
-      SCCACHE_GHA_ENABLED: "true"
+      SCCACHE_GHA_ENABLED: "on"
     steps:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v5
@@ -70,12 +70,11 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.9
         with:
           version: "v0.10.0"
-      - name: Configure sccache
+      - name: Configure Cache Env
         uses: actions/github-script@v7
         with:
           script: |
             core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       - name: Install System Dependencies (APT - Ubuntu/Debian)
         if: steps.detect-pm.outputs.package_manager == 'apt'
@@ -106,7 +105,7 @@ jobs:
             clang \
             llvm
           echo "APT package installation completed"
-
+      
       - name: Test sccache on host
         run: |
           echo "Testing sccache GitHub Actions cache access on host..."
@@ -125,7 +124,7 @@ jobs:
           rm -f test_host.c test_host.o
           echo "Host sccache test complete"
         env:
-          SCCACHE_GHA_ENABLED: true
+          SCCACHE_GHA_ENABLED: "on"
       - name: Restore Build Cache
         uses: actions/cache/restore@v4
         with:
@@ -201,7 +200,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_GHA_ENABLED=true SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_LOG=debug
+          CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_GHA_ENABLED=on SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_LOG=debug
           CIBW_BUILD_VERBOSITY: 1
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             echo "Final sccache stats:"
