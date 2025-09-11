@@ -223,7 +223,6 @@ explicit = true
 torch = [ { index = "pytorch-cpu" } ]
 torchvision = [ { index = "pytorch-cpu" } ]
 pandas = [
-  { index = "pypi", marker = "python_version < '3.14'" },
   { index = "scientific-python-nightly", marker = "python_version >= '3.14'" }
 ]
 
