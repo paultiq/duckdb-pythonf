@@ -214,9 +214,18 @@ name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
+[[tool.uv.index]]
+name = "scientific-python-nightly"
+url = "https://pypi.anaconda.org/scientific-python-nightly-wheels/simple"
+explicit = true
+
 [tool.uv.sources]
 torch = [ { index = "pytorch-cpu" } ]
 torchvision = [ { index = "pytorch-cpu" } ]
+pandas = [ 
+  { marker = "python_version < '3.14'" },
+  { marker = "python_version >= '3.14'", index = "scientific-python-nightly" }
+]
 
 [dependency-groups] # used for development only, requires pip >=25.1.0
 stubdeps = [ # dependencies used for typehints in the stubs
@@ -244,7 +253,7 @@ test = [ # dependencies used for running tests
     "urllib3",
     "fsspec>=2022.11.0",
     "pandas>=2.0.0; python_version < '3.14'",
-    "pandas>=2.3.0.dev0; python_version >= '3.14' --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
+    "pandas>=2.3.0.dev0; python_version >= '3.14'",
     "pyarrow>=18.0.0; python_version < '3.14'",
     "torch>=2.2.2; python_version < '3.14' and (sys_platform != 'darwin' or platform_machine != 'x86_64' or python_version < '3.13')",
     "tensorflow==2.14.0; sys_platform == 'darwin' and python_version < '3.12'",
@@ -260,7 +269,7 @@ scripts = [ # dependencies used for running scripts
     "ipywidgets",
     "numpy",
     "pandas; python_version < '3.14'",
-    "pandas>=2.3.0.dev0; python_version >= '3.14' --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",
+    "pandas>=2.3.0.dev0; python_version >= '3.14'",
     "pcpp",
     "polars; python_version < '3.14'",
     "pyarrow; python_version < '3.14'",
