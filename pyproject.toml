@@ -307,8 +307,8 @@ minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
 filterwarnings = [
-    # Pandas nightly build ChainedAssignmentError warnings
-    "ignore:ChainedAssignmentError.*:FutureWarning",
+    # Pandas nightly build ChainedAssignmentError exceptions
+    "ignore::pandas.errors.ChainedAssignmentError",
     "error",
     "ignore::UserWarning",
     # Jupyter is throwing DeprecationWarnings
