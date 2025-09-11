@@ -314,6 +314,8 @@ filterwarnings = [
     # Pyspark is throwing these warnings
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
     "ignore:is_datetime64tz_dtype is deprecated:DeprecationWarning",
+    # Pandas nightly build ChainedAssignmentError warnings
+    "ignore:ChainedAssignmentError.*:FutureWarning",
 ]
 
 [tool.coverage.run]
