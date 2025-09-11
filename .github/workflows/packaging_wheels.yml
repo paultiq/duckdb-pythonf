@@ -34,9 +34,9 @@ jobs:
       matrix:
         python: [ cp314t ]  # cp39, cp310, cp311, cp312, cp314, cp314t 
         platform:
-          - { os: self-hosted, arch: x86_64,     cibw_system: manylinux}
+          # - { os: self-hosted, arch: x86_64,     cibw_system: manylinux}
           #- { os: windows-2025,     arch: amd64,      cibw_system: win }
-          # - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
+          - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
           #- { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
           #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
           #- { os: macos-15,         arch: universal2, cibw_system: macosx }
@@ -107,29 +107,6 @@ jobs:
             clang \
             llvm
           echo "APT package installation completed"
-      
-      - name: Debug - Check compiler versions
-        run: |
-          echo "=== Runner Environment Debug ==="
-          echo "Runner OS: ${{ runner.os }}"
-          echo "Runner architecture: ${{ runner.arch }}"
-          echo "OS Info:"
-          cat /etc/os-release
-          echo "=== Compiler Versions ==="
-          gcc --version || echo "gcc not found"
-          g++ --version || echo "g++ not found" 
-          clang --version || echo "clang not found"
-          clang++ --version || echo "clang++ not found"
-          echo "=== Available GCC Versions ==="
-          ls -la /usr/bin/gcc* || echo "no gcc binaries found"
-          ls -la /usr/bin/g++* || echo "no g++ binaries found"
-          echo "=== Build Environment ==="
-          which cmake && cmake --version || echo "cmake not found"
-          which ninja && ninja --version || echo "ninja not found"
-          echo "=== Python Environment ==="
-          which python && python --version || echo "python not found"
-          echo "================================"
-
       - name: Cache
         uses: actions/cache@v4
         with:
