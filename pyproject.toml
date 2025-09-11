@@ -419,7 +419,6 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = ["brew install sccache"]
 
 [tool.cibuildwheel.windows]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
     "choco install sccache",
     "echo 'sccache installation complete, verifying...'",
