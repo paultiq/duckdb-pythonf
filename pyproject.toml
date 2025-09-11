@@ -47,7 +47,7 @@ all = [ # users can install duckdb with 'duckdb[all]', which will install this l
     "fsspec",  # used in duckdb.filesystem
     "numpy",   # used in duckdb.experimental.spark and in duckdb.fetchnumpy()
     "pandas; python_version < '3.14'",  # used for pandas dataframes all over the place
-    "pandas>=2.3.0.dev0; python_version >= '3.14' --extra-index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple",  # nightly build for Python 3.14
+    "pandas>=2.3.0.dev0; python_version >= '3.14'",  # nightly build for Python 3.14
     "pyarrow; python_version < '3.14'", # used for pyarrow support
     "adbc_driver_manager; python_version < '3.14'", # for the adbc driver (TODO: this should live under the duckdb package)
 ]
