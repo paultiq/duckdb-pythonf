@@ -142,19 +142,6 @@ jobs:
             }}
 
 
-      - name: Debug Python paths
-        run: |
-          echo "Current python: $(which python)"
-          echo "Python version: $(python --version)"
-          echo "pythonLocation: $pythonLocation" 
-          echo "Checking CIBW_TOOL_PYTHON path: /opt/hostedtoolcache/Python/3.14.0-rc.2/x64-freethreaded/bin/python"
-          ls -la /opt/hostedtoolcache/Python/3.14.0-rc.2/x64-freethreaded/bin/python || echo "Path not found"
-          
-      - name: Debug CIBW_TOOL_PYTHON path
-        run: |
-          echo "pythonLocation: $pythonLocation"
-          echo "Expected CIBW_TOOL_PYTHON: $pythonLocation/bin/python"
-          ls -la "$pythonLocation/bin/python" || echo "Python not found at expected location"
           
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel==3.1.4
