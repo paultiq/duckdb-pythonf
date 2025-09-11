@@ -127,7 +127,7 @@ jobs:
       - name: Set OVERRIDE_GIT_DESCRIBE
         if: ${{ inputs.set-version != '' }}
         run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }} SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }}" >> $GITHUB_ENV
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v6
         with:
           python-version: ${{
