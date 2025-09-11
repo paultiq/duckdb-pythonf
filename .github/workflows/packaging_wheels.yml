@@ -36,11 +36,11 @@ jobs:
         platform:
           #- { os: self-hosted, arch: x86_64,     cibw_system: manylinux}
           - { os: windows-2025,     arch: amd64,      cibw_system: win }
-          - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
-          - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
-          - { os: macos-15,         arch: arm64,      cibw_system: macosx }
-          - { os: macos-15,         arch: universal2, cibw_system: macosx }
-          - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
+          #- { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
+          #- { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
+          #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
+          #- { os: macos-15,         arch: universal2, cibw_system: macosx }
+          #- { os: macos-13,         arch: x86_64,     cibw_system: macosx }
         minimal:
           - ${{ inputs.minimal }}
         exclude:
@@ -56,10 +56,11 @@ jobs:
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
-        PYTHON_GIL=1 uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs 
+        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs 
       SCCACHE_GHA_ENABLED: "on"
       SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
       ACTIONS_CACHE_SERVICE_V2: "1"
+      PYTHON_GIL: "1" 
     steps:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v5

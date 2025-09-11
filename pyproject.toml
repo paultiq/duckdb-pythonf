@@ -392,7 +392,7 @@ manylinux-pypy_aarch64-image = "manylinux_2_28"
 enable = ["cpython-freethreading", "cpython-prerelease"]
 
 [tool.cibuildwheel.linux]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
   "if [ \"$(uname -m)\" = \"aarch64\" ]; then ARCH=aarch64; else ARCH=x86_64; fi",
   "curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz",
@@ -415,9 +415,17 @@ before-build = [
 before-test = "sccache --show-stats"
 
 [tool.cibuildwheel.macos]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+environment = { CMAKE_C_COMPILER_LAUNCHER = "sccache", CMAKE_CXX_COMPILER_LAUNCHER = "sccache" }
 before-build = ["brew install sccache"]
+after-build = ["sccache --show-stats"]
 
 [tool.cibuildwheel.windows]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+environment = { CMAKE_C_COMPILER_LAUNCHER = "sccache", CMAKE_CXX_COMPILER_LAUNCHER = "sccache" }
 before-build = ["choco install sccache"]
+after-build = ["sccache --show-stats"]
+
+[[tool.cibuildwheel.overrides]]
+select = "cp314t-*"
+environment = { Python_LIBRARY_RELEASE = "python314t.lib" }
