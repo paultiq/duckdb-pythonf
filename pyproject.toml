@@ -307,15 +307,15 @@ minversion = "6.0"
 addopts = "-ra -q"
 testpaths = ["tests"]
 filterwarnings = [
+    # Pandas nightly build ChainedAssignmentError warnings
+    "ignore:ChainedAssignmentError.*:FutureWarning",
     "error",
     "ignore::UserWarning",
     # Jupyter is throwing DeprecationWarnings
     "ignore:function ham() is deprecated:DeprecationWarning",
     # Pyspark is throwing these warnings
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
-    "ignore:is_datetime64tz_dtype is deprecated:DeprecationWarning",
-    # Pandas nightly build ChainedAssignmentError warnings
-    "ignore:ChainedAssignmentError.*:FutureWarning",
+    "ignore:is_datetime64tz_dtype is deprecated:DeprecationWarning"
 ]
 
 [tool.coverage.run]
