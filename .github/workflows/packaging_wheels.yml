@@ -157,7 +157,7 @@ jobs:
             echo "Python version mismatch!"
             exit 1
           fi
-          
+
 
       - name: Debug Python paths
         run: |
@@ -167,10 +167,16 @@ jobs:
           echo "Checking CIBW_TOOL_PYTHON path: /opt/hostedtoolcache/Python/3.14.0-rc.2/x64-freethreaded/bin/python"
           ls -la /opt/hostedtoolcache/Python/3.14.0-rc.2/x64-freethreaded/bin/python || echo "Path not found"
           
+      - name: Debug CIBW_TOOL_PYTHON path
+        run: |
+          echo "pythonLocation: $pythonLocation"
+          echo "Expected CIBW_TOOL_PYTHON: $pythonLocation/bin/python"
+          ls -la "$pythonLocation/bin/python" || echo "Python not found at expected location"
+          
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
         uses: pypa/cibuildwheel@v3.0
         env:
-          CIBW_TOOL_PYTHON: /opt/hostedtoolcache/Python/3.14.0-rc.2/x64-freethreaded/bin/python
+          CIBW_TOOL_PYTHON: ${{ env.pythonLocation }}/bin/python
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           CIBW_ENVIRONMENT: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_GHA_ENABLED=true SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_LOG=debug
