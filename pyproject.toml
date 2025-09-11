@@ -226,8 +226,8 @@ torchvision = [ { index = "pytorch-cpu" } ]
 stubdeps = [ # dependencies used for typehints in the stubs
     "fsspec",
     "pandas",
-    "polars",
-    "pyarrow",
+    "polars; python_version < '3.14'",
+    "pyarrow; python_version < '3.14'",
 ]
 test = [ # dependencies used for running tests
     "pytest",
@@ -311,8 +311,7 @@ filterwarnings = [
     # Pyspark is throwing these warnings
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
     "ignore:is_datetime64tz_dtype is deprecated:DeprecationWarning",
-    # Pandas nightly build ChainedAssignmentError warnings
-    "ignore:ChainedAssignmentError.*:FutureWarning",
+    "ignore:ChainedAssignmentError.*:FutureWarning"
 ]
 
 [tool.coverage.run]
