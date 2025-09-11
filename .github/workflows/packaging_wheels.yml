@@ -59,7 +59,7 @@ jobs:
         uv run python -c "import duckdb"
       #uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
       SCCACHE_GHA_ENABLED: "on"
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ matrix.python }}-${{ matrix.platform.arch }} 
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
       ACTIONS_CACHE_SERVICE_V2: "1"
     steps:
       - name: Checkout DuckDB Python
@@ -108,6 +108,27 @@ jobs:
             llvm
           echo "APT package installation completed"
       
+      - name: Debug - Check compiler versions
+        run: |
+          echo "=== Runner Environment Debug ==="
+          echo "Runner OS: ${{ runner.os }}"
+          echo "Runner architecture: ${{ runner.arch }}"
+          echo "OS Info:"
+          cat /etc/os-release
+          echo "=== Compiler Versions ==="
+          gcc --version || echo "gcc not found"
+          g++ --version || echo "g++ not found" 
+          clang --version || echo "clang not found"
+          clang++ --version || echo "clang++ not found"
+          echo "=== Available GCC Versions ==="
+          ls -la /usr/bin/gcc* || echo "no gcc binaries found"
+          ls -la /usr/bin/g++* || echo "no g++ binaries found"
+          echo "=== Build Environment ==="
+          which cmake && cmake --version || echo "cmake not found"
+          which ninja && ninja --version || echo "ninja not found"
+          echo "=== Python Environment ==="
+          which python && python --version || echo "python not found"
+          echo "================================"
 
       - name: Cache
         uses: actions/cache@v4
