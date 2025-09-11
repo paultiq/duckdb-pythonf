@@ -195,9 +195,3 @@ jobs:
           name: wheel-${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           path: wheelhouse/*.whl
           compression-level: 0
-      - name: Show final sccache stats
-        if: always()
-        run: |
-          echo "Final sccache statistics on host:"
-          sccache --show-stats || echo "sccache not available on host"
-          key: build-dir-${{ matrix.python }}-${{ runner.os }}-e
