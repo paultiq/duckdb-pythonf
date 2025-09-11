@@ -223,8 +223,8 @@ explicit = true
 torch = [ { index = "pytorch-cpu" } ]
 torchvision = [ { index = "pytorch-cpu" } ]
 pandas = [
-  { marker = "python_version < '3.14'" },
-  { marker = "python_version >= '3.14'", index = "scientific-python-nightly" }
+  { index = "pypi", marker = "python_version < '3.14'" },
+  { index = "scientific-python-nightly", marker = "python_version >= '3.14'" }
 ]
 
 [dependency-groups] # used for development only, requires pip >=25.1.0
