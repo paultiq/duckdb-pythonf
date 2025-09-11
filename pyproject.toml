@@ -418,13 +418,13 @@ before-test = "sccache --show-stats"
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 environment = { CMAKE_C_COMPILER_LAUNCHER = "sccache", CMAKE_CXX_COMPILER_LAUNCHER = "sccache" }
 before-build = ["brew install sccache"]
-after-build = ["sccache --show-stats"]
+before-test = ["sccache --show-stats"]
 
 [tool.cibuildwheel.windows]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 environment = { CMAKE_C_COMPILER_LAUNCHER = "sccache", CMAKE_CXX_COMPILER_LAUNCHER = "sccache" }
 before-build = ["choco install sccache"]
-after-build = ["sccache --show-stats"]
+before-test = ["sccache --show-stats"]
 
 [[tool.cibuildwheel.overrides]]
 select = "cp314t-*"
