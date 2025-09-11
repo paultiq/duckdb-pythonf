@@ -19,6 +19,8 @@ on:
 #   cancel-in-progress: true
 
 jobs:
+  runs-on: self-hosted
+
   submodule_sanity_guard:
     name: Make sure submodule is in a sane state
     uses: ./.github/workflows/submodule_sanity.yml

@@ -61,6 +61,8 @@ defaults:
     shell: bash
 
 jobs:
+  runs-on: self-hosted
+
   build_sdist:
     name: Build an sdist and determine versions
     if: ${{ github.event_name != 'pull_request' }}
