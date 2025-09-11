@@ -222,9 +222,6 @@ explicit = true
 [tool.uv.sources]
 torch = [ { index = "pytorch-cpu" } ]
 torchvision = [ { index = "pytorch-cpu" } ]
-pandas = [
-  { index = "scientific-python-nightly", marker = "python_version >= '3.14'" }
-]
 
 [dependency-groups] # used for development only, requires pip >=25.1.0
 stubdeps = [ # dependencies used for typehints in the stubs
