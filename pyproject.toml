@@ -424,5 +424,7 @@ before-build = ["choco install sccache"]
 before-test = ["sccache --show-stats"]
 
 [[tool.cibuildwheel.overrides]]
+# Use the correct lib file for 3.14t, without this it looks 
+# for python314.lib
 select = "cp314t-*"
-environment = { Python_LIBRARY_RELEASE = "python314t.lib" }
+environment = { CMAKE_ARGS = "-DPython_LIBRARY_RELEASE=python314t.lib" }
