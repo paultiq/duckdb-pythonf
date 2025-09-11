@@ -388,6 +388,8 @@ before-build = [
   "curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz | tar xz",
   "cp sccache-v0.10.0-x86_64-unknown-linux-musl/sccache /usr/bin",
   "which sccache",
+  "mkdir -p /tmp/sccache-cache",
+  "export SCCACHE_DIR=/tmp/sccache-cache",
   "if [ -z \"$ACTIONS_RESULTS_URL\" ]; then echo \"ERROR: ACTIONS_RESULTS_URL not set in container\" && exit 1; fi",
   "if [ -z \"$ACTIONS_RUNTIME_TOKEN\" ]; then echo \"ERROR: ACTIONS_RUNTIME_TOKEN not set in container\" && exit 1; fi",
   "echo \"GitHub Actions environment variables verified in container\"",
