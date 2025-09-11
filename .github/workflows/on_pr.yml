@@ -19,14 +19,11 @@ on:
 #   cancel-in-progress: true
 
 jobs:
-
   submodule_sanity_guard:
-
     name: Make sure submodule is in a sane state
     uses: ./.github/workflows/submodule_sanity.yml
 
   packaging_test:
-
     name: Build a minimal set of packages and run all tests on them
     needs: submodule_sanity_guard
     # Skip packaging tests for draft PRs
@@ -38,7 +35,6 @@ jobs:
       duckdb-sha: ${{ github.base_ref }}
 
   coverage_test:
-
     name: Run coverage tests
     needs: submodule_sanity_guard
     # Only run coverage test for draft PRs
