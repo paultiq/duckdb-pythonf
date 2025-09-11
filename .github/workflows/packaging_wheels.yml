@@ -53,7 +53,7 @@ jobs:
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
-        sccache --show-stats
+        sccache --show-stats &&
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
