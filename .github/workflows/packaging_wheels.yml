@@ -173,12 +173,7 @@ jobs:
         run: python -m pip install cibuildwheel==3.1.4
         
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
-        run: |
-          echo "Testing dependency installation without build..."
-          export UV_CACHE_DIR="${{ runner.home }}/.cache/uv"
-          uv export --only-group test --no-emit-project --output-file pylock.toml
-          uv pip install -r pylock.toml
-          echo "Dependencies installed successfully"
+        run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
