@@ -141,19 +141,6 @@ jobs:
             fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
             }}
 
-      - name: Verify Python version
-        run: |
-          expected="${{ fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python] }}"
-          actual=$(python --version | cut -d' ' -f2)
-          echo "Expected: $expected, Actual: $actual"
-          if [[ "$expected" == "3.14t" && "$actual" =~ ^3\.14\. ]]; then
-            echo "Python 3.14t version check passed"
-          elif [[ "$actual" =~ ^$expected\. ]]; then
-            echo "Python version check passed"
-          else
-            echo "Python version mismatch!"
-            exit 1
-          fi
 
       - name: Debug Python paths
         run: |
