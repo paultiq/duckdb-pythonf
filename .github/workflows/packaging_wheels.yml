@@ -56,7 +56,7 @@ jobs:
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
-        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
+        PYTHON_GIL=1 uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
       SCCACHE_GHA_ENABLED: "on"
       SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
       ACTIONS_CACHE_SERVICE_V2: "1"
