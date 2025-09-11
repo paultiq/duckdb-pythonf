@@ -105,6 +105,26 @@ jobs:
           script: |
             core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+      
+      - name: Test sccache on host
+        run: |
+          echo "Testing sccache GitHub Actions cache access on host..."
+          sccache --start-server
+          echo "Host environment variables:"
+          echo "ACTIONS_RESULTS_URL: ${ACTIONS_RESULTS_URL}"
+          echo "ACTIONS_RUNTIME_TOKEN: ${ACTIONS_RUNTIME_TOKEN:+SET}"
+          echo "SCCACHE_GHA_ENABLED: ${SCCACHE_GHA_ENABLED}"
+          echo "Initial sccache stats:"
+          sccache --show-stats
+          echo 'int main(){return 0;}' > test_host.c
+          echo "Compiling test file with sccache on host..."
+          SCCACHE_LOG=debug sccache gcc -c test_host.c -o test_host.o 2>&1 | head -20 || true
+          echo "Final sccache stats on host:"
+          sccache --show-stats
+          rm -f test_host.c test_host.o
+          echo "Host sccache test complete"
+        env:
+          SCCACHE_GHA_ENABLED: true
       - name: Restore Build Cache
         uses: actions/cache/restore@v4
         with:
