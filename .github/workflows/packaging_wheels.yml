@@ -158,6 +158,14 @@ jobs:
             exit 1
           fi
 
+      - name: Debug Python paths
+        run: |
+          echo "Current python: $(which python)"
+          echo "Python version: $(python --version)"
+          echo "pythonLocation: $pythonLocation" 
+          echo "Checking CIBW_TOOL_PYTHON path: /opt/hostedtoolcache/Python/3.14.0-rc.2/x64-freethreaded/bin/python"
+          ls -la /opt/hostedtoolcache/Python/3.14.0-rc.2/x64-freethreaded/bin/python || echo "Path not found"
+          
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
         uses: pypa/cibuildwheel@v3.0
         env:
