@@ -21,13 +21,11 @@ on:
 jobs:
 
   submodule_sanity_guard:
-    runs-on: self-hosted
 
     name: Make sure submodule is in a sane state
     uses: ./.github/workflows/submodule_sanity.yml
 
   packaging_test:
-    runs-on: self-hosted
 
     name: Build a minimal set of packages and run all tests on them
     needs: submodule_sanity_guard
@@ -40,7 +38,6 @@ jobs:
       duckdb-sha: ${{ github.base_ref }}
 
   coverage_test:
-    runs-on: self-hosted
 
     name: Run coverage tests
     needs: submodule_sanity_guard
