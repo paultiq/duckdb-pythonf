@@ -433,8 +433,9 @@ before-build = [
 [tool.cibuildwheel.windows]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
-    "echo 'Setting up Visual Studio environment...'",
-    "call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat\"",
+    "echo 'Setting up Visual Studio environment with pinned Windows SDK...'",
+    "call \"%ProgramFiles(x86)%\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\Tools\\VsDevCmd.bat\" -winsdk=10.0.26100.0",
+    "set CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=10.0.26100.0",
     "echo 'Removing Strawberry Perl ccache to avoid conflicts...'",
     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\" ",
     "choco install sccache",
@@ -446,7 +447,9 @@ before-build = [
     "where mt",
     "echo 'Environment variables:'",
     "echo 'VCINSTALLDIR=%VCINSTALLDIR%'",
-    "echo 'WindowsSdkDir=%WindowsSdkDir%'"
+    "echo 'WindowsSdkDir=%WindowsSdkDir%'",
+    "echo 'WindowsSDKVersion=%WindowsSDKVersion%'",
+    "echo 'CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=%CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION%'"
 ]
 before-test = [
     "echo 'Final sccache statistics:'", 
@@ -457,7 +460,7 @@ before-test = [
 # Use Ninja generator on Windows for sccache compatibility
 # Force MSVC compiler and enable sccache launcher
 if.platform-system = "^win32"
-cmake.args = ["-G", "Ninja", "-DCMAKE_C_COMPILER=C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe", "-DCMAKE_CXX_COMPILER=C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe", "-DCMAKE_RC_COMPILER=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/rc.exe", "-DCMAKE_MT=C:/Program Files (x86)/Windows Kits/10/bin/10.0.26100.0/x64/mt.exe", "-DCMAKE_C_COMPILER_LAUNCHER=sccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"]
+cmake.args = ["-G", "Ninja", "-DCMAKE_C_COMPILER_LAUNCHER=sccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"]
 
 [[tool.cibuildwheel.overrides]]
 # Use the correct lib file for 3.14t, without this it looks 
