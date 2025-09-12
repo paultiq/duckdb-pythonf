@@ -433,10 +433,14 @@ before-build = [
 [tool.cibuildwheel.windows]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
+    "echo 'Setting up Visual Studio environment...'",
+    "call \"C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars64.bat\"",
     "echo 'Removing Strawberry Perl ccache to avoid conflicts...'",
     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\" ",
     "choco install sccache",
     "sccache --version",
+    "where cl",
+    "where c++"
 ]
 before-test = [
     "echo 'Final sccache statistics:'", 
@@ -446,7 +450,7 @@ before-test = [
 [[tool.scikit-build.overrides]]
 # Use Ninja generator on Windows for sccache compatibility  
 if.platform-system = "^win32"
-cmake.args = ["-G", "Ninja", "-DCMAKE_C_COMPILER=cl", "-DCMAKE_CXX_COMPILER=cl"]
+cmake.args = ["-G", "Ninja"]
 
 [[tool.cibuildwheel.overrides]]
 # Use the correct lib file for 3.14t, without this it looks 
