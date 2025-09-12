@@ -57,7 +57,7 @@ jobs:
       CIBW_TEST_COMMAND: >
         uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs 
       SCCACHE_GHA_ENABLED: "on"
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}-b
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
       ACTIONS_CACHE_SERVICE_V2: "1"  
       PYTHON_GIL: "1"  
       # Needed for 3.14t to indicate that it's OK to enable the GIL. Noop for other versions.
@@ -109,6 +109,7 @@ jobs:
         shell: cmd
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+            set VSCMD_ARG_TGT_ARCH=x64
             call "%%i\Common7\Tools\VsDevCmd.bat"
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
           )

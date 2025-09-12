@@ -455,21 +455,20 @@ cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
     "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
-    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG",
-    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG",
+    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPYTHON_NO_LINK",
+    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPYTHON_NO_LINK",
     "-DCMAKE_C_COMPILER_LAUNCHER=",
     "-DCMAKE_CXX_COMPILER_LAUNCHER=",
+    "-DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
+    "-DCMAKE_EXE_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
     "-DPython3_FIND_STRATEGY=LOCATION",
-    "-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
-    "-DPython3_LIBRARY_RELEASE=python314t.lib",
-    "-DPython_LIBRARY=python314t.lib",
-    "-DPython_LIBRARY_RELEASE=python314t.lib",
-    "--debug-output",
-    "--debug-find",
-    "--debug-find-pkg=Python3",
-    "--trace-expand",
-    "--log-level=DEBUG"
+    "-DPython3_FIND_ABI=ANY;ANY;ANY;ON"
 ]
+    # "--debug-output",
+    # "--debug-find",
+    # "--debug-find-pkg=Python3",
+    # "--trace-expand",
+    # "--log-level=DEBUG"
 
 [[tool.cibuildwheel.overrides]]
 # Use the correct lib file for 3.14t free-threading build
