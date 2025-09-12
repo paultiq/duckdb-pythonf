@@ -105,26 +105,25 @@ jobs:
         run: |
           echo "Installed uv version is ${{ steps.setup-uv.outputs.uv-version }}"
           uv pip install cibuildwheel==3.1.4
-      - name: Set up Visual Studio environment (Windows)
+      - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Windows)
         if: matrix.platform.cibw_system == 'win'
         shell: cmd
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSINSTALLDIR=%%i
-          for /f "usebackq tokens=*" %%i in (`dir /b "%VSINSTALLDIR%\VC\Tools\MSVC"`) do set MSVCVER=%%i
-          set CLPATH=%VSINSTALLDIR%\VC\Tools\MSVC\%MSVCVER%\bin\Hostx64\x64\cl.exe
-          echo CC=%CLPATH% >> %GITHUB_ENV%
-          echo CXX=%CLPATH% >> %GITHUB_ENV%
-          echo Compiler paths set: %CLPATH%
-      - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
+          call "%VSINSTALLDIR%\Common7\Tools\VsDevCmd.bat"
+          uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
+          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON
+          CIBW_BUILD_VERBOSITY: 3
+      - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Non-Windows)
+        if: matrix.platform.cibw_system != 'win'
         run: uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          # SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1
           CIBW_ENVIRONMENT_LINUX: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" 
-          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON
-          #  PYTHON_GIL=1
-          # SCCACHE_GHA_ENABLED=on ACTIONS_RUNTIME_TOKEN=${{ github.token }} ACTIONS_RESULTS_URL=${{ env.ACTIONS_RESULTS_URL }} ACTIONS_CACHE_SERVICE_V2=1 SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} #
           CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
           CIBW_BUILD_VERBOSITY: 3
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
