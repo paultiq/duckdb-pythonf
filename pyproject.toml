@@ -446,6 +446,24 @@ before-test = [
 ]
 
 [[tool.scikit-build.overrides]]
+# Regular Windows builds (non-free-threading)
+if.platform-system = "^win32"
+if.python-version = "!~3.14t"
+cmake.args = [
+    "-G", "Ninja",
+    "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+    "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
+    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG",
+    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG",
+    "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
+    "-DCMAKE_C_COMPILER_LAUNCHER=",
+    "-DCMAKE_CXX_COMPILER_LAUNCHER=",
+    "-DCORE_EXTENSIONS=",
+    "-DBUILD_UNITTESTS=OFF"
+]
+
+[[tool.scikit-build.overrides]]
+# Free-threading Windows builds (Python 3.14t)
 # To get sccache to work, needed a few things
 # Ninja
 # /Z7 so we don't write parallel PDBs
@@ -453,24 +471,28 @@ before-test = [
 # The LIBRARY is because it picks up python314.lib, instead of python314t.lib
 # TODO: Dynamically add the "t" for future versions (ie: python315t)
 if.platform-system = "^win32"
+if.python-version = "~3.14t"
 cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
     "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
     "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPY_NO_LINK_LIB /DPy_GIL_DISABLED",
     "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPY_NO_LINK_LIB /DPy_GIL_DISABLED",
-    "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
     "-DCMAKE_C_COMPILER_LAUNCHER=",
     "-DCMAKE_CXX_COMPILER_LAUNCHER=",
-    "-DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
-    "-DCMAKE_EXE_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
-    "-DCMAKE_LIBRARY_PATH=${Python3_LIBRARY_DIRS}",
-    "-DPython3_FIND_STRATEGY=LOCATION",
-    "-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
-    "-DPython3_LIBRARY_RELEASE=python314t.lib",
-    "-DCORE_EXTENSIONS=",
-    "-DBUILD_UNITTESTS=OFF"
 ]
+    #    "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
+
+    #"-DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
+    #"-DCMAKE_EXE_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
+    
+    #    "-DCMAKE_LIBRARY_PATH=${Python3_LIBRARY_DIRS}",
+
+    #"-DPython3_FIND_STRATEGY=LOCATION",
+    #"-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
+    #"-DPython3_LIBRARY_RELEASE=python314t.lib",
+    # "-DCORE_EXTENSIONS=",
+    # "-DBUILD_UNITTESTS=OFF"
     # "--debug-output",
     # "--debug-find",
     # "--debug-find-pkg=Python3",
