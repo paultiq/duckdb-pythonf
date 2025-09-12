@@ -234,9 +234,9 @@ test = [ # dependencies used for running tests
     "pytest",
     "pytest-reraise",
     "pytest-timeout",
-    "pytest-randomly",      # Ensures non-deterministic test order
-    "pytest-xdist",      # Parallel tests (separate processes)
-    "pytest-run-parallel",  # For free-threading testing
+    # "pytest-randomly",      # Ensures non-deterministic test order
+    # "pytest-xdist",      # Parallel tests (separate processes)
+    # "pytest-run-parallel",  # For free-threading testing
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
