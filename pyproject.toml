@@ -235,6 +235,7 @@ test = [ # dependencies used for running tests
     "pytest-reraise",
     "pytest-timeout",
     "pytest-randomly",      # Ensures non-deterministic test order
+    "pytest-xdist",      # Parallel tests (separate processes)
     "pytest-run-parallel",  # For free-threading testing
     "mypy",
     "coverage",
@@ -471,7 +472,8 @@ cmake.args = [
 # The LIBRARY is because it picks up python314.lib, instead of python314t.lib
 # TODO: Dynamically add the "t" for future versions (ie: python315t)
 if.platform-system = "^win32"
-if.python-version = "~3.14t"
+if.python-version = "==3.14.*"
+if.implementation = "cpython-freethreading"
 cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
