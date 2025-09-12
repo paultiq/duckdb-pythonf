@@ -459,10 +459,16 @@ cmake.args = [
     "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG",
     "-DCMAKE_C_COMPILER_LAUNCHER=",
     "-DCMAKE_CXX_COMPILER_LAUNCHER=",
+    "-DPython3_FIND_STRATEGY=LOCATION",
     "-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
     "-DPython3_LIBRARY_RELEASE=python314t.lib",
     "-DPython_LIBRARY=python314t.lib",
-    "-DPython_LIBRARY_RELEASE=python314t.lib"
+    "-DPython_LIBRARY_RELEASE=python314t.lib",
+    "--debug-output",
+    "--debug-find",
+    "--debug-find-pkg=Python3",
+    "--trace-expand",
+    "--log-level=DEBUG"
 ]
 
 [[tool.cibuildwheel.overrides]]
