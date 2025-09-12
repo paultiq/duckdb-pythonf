@@ -234,6 +234,8 @@ test = [ # dependencies used for running tests
     "pytest",
     "pytest-reraise",
     "pytest-timeout",
+    "pytest-randomly",      # Ensures non-deterministic test order
+    "pytest-run-parallel",  # For free-threading testing
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
@@ -455,8 +457,8 @@ cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
     "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
-    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPYTHON_NO_LINK",
-    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPYTHON_NO_LINK",
+    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPY_NO_LINK_LIB",
+    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/O2 /Z7 /DNDEBUG /DPY_NO_LINK_LIB",
     "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
     "-DCMAKE_C_COMPILER_LAUNCHER=",
     "-DCMAKE_CXX_COMPILER_LAUNCHER=",
@@ -465,7 +467,7 @@ cmake.args = [
     "-DCMAKE_LIBRARY_PATH=${Python3_LIBRARY_DIRS}",
     "-DPython3_FIND_STRATEGY=LOCATION",
     "-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
-    "-DPython3_LIBRARY=python314t.lib",
+    "-DPython3_LIBRARY_RELEASE=python314t.lib",
     "-DCORE_EXTENSIONS=",
     "-DBUILD_UNITTESTS=OFF"
 ]
