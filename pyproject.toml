@@ -434,7 +434,7 @@ before-build = [
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
     "echo 'Setting up Visual Studio environment with pinned Windows SDK...'",
-    "call \"%ProgramFiles(x86)%\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\Tools\\VsDevCmd.bat\" -winsdk=10.0.26100.0",
+    "for /f \"usebackq tokens=*\" %i in (`\"%ProgramFiles(x86)%\\Microsoft Visual Studio\\Installer\\vswhere.exe\" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (call \"%i\\Common7\\Tools\\VsDevCmd.bat\" -winsdk=10.0.26100.0)",
     "set CMAKE_VS_WINDOWS_TARGET_PLATFORM_VERSION=10.0.26100.0",
     "echo 'Removing Strawberry Perl ccache to avoid conflicts...'",
     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\" ",
