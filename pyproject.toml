@@ -434,7 +434,7 @@ before-build = [
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
     "echo 'Removing Strawberry Perl ccache to avoid conflicts...'",
-    "choco uninstall strawberryperl -y --force",
+    "del \"C:\\Strawberry\\c\\bin\\ccache.exe\" ",
     "choco install sccache",
     "sccache --version"
 ]
@@ -442,6 +442,11 @@ before-test = [
     "echo 'Final sccache statistics:'", 
     "sccache --show-stats"
 ]
+
+[[tool.scikit-build.overrides]]
+# Use Ninja generator on Windows for sccache compatibility  
+if.platform-system = "Windows"
+cmake.generator = "Ninja"
 
 [[tool.cibuildwheel.overrides]]
 # Use the correct lib file for 3.14t, without this it looks 
