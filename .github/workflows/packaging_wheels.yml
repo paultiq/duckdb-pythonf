@@ -35,10 +35,10 @@ jobs:
         python: [ cp314t ]  # cp39, cp310, cp311, cp312, cp313, cp314, cp314t 
         platform:
           #- { os: self-hosted, arch: x86_64,     cibw_system: manylinux}
-          #- { os: windows-2025,     arch: amd64,      cibw_system: win }
+          - { os: windows-2025,     arch: amd64,      cibw_system: win }
           #- { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
           #- { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
-          - { os: macos-15,         arch: arm64,      cibw_system: macosx }
+          #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
           #- { os: macos-15,         arch: universal2, cibw_system: macosx }
           #- { os: macos-13,         arch: x86_64,     cibw_system: macosx }
         minimal:
@@ -159,7 +159,7 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1 CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
           #  PYTHON_GIL=1
           # SCCACHE_GHA_ENABLED=on ACTIONS_RUNTIME_TOKEN=${{ github.token }} ACTIONS_RESULTS_URL=${{ env.ACTIONS_RESULTS_URL }} ACTIONS_CACHE_SERVICE_V2=1 SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} #
-          CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1 CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
+          CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1  CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
           CIBW_BUILD_VERBOSITY: 1
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
             echo "Final sccache stats:"
