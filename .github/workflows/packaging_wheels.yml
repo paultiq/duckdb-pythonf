@@ -59,7 +59,8 @@ jobs:
       SCCACHE_GHA_ENABLED: "on"
       SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
       ACTIONS_CACHE_SERVICE_V2: "1"  
-      PYTHON_GIL: "1"  # Needed for 3.14t to indicate that it's OK to enable the GIL. Noop for other versions.
+      PYTHON_GIL: "1"  
+      # Needed for 3.14t to indicate that it's OK to enable the GIL. Noop for other versions.
     steps:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v5
@@ -109,10 +110,6 @@ jobs:
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
             call "%%i\Common7\Tools\VsDevCmd.bat"
-            # echo "After VsDevCmd - checking PATH contains Visual Studio:"
-            # echo !PATH! | findstr /i "Microsoft Visual Studio"
-            # echo "Checking if cl is available:"
-            # where cl
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
           )
         env:
