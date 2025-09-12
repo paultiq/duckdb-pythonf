@@ -442,9 +442,11 @@ before-build = [
     "sccache --version",
     "echo 'Checking for build tools...'",
     "where cl",
+    "where c++",
     "where link",
     "where rc",
     "where mt",
+    "echo 'PATH=%PATH%'",
     "echo 'Environment variables:'",
     "echo 'VCINSTALLDIR=%VCINSTALLDIR%'",
     "echo 'WindowsSdkDir=%WindowsSdkDir%'",
@@ -460,7 +462,7 @@ before-test = [
 # Use Ninja generator on Windows for sccache compatibility
 # Force MSVC compiler and enable sccache launcher
 if.platform-system = "^win32"
-cmake.args = ["-G", "Ninja", "-DCMAKE_C_COMPILER_LAUNCHER=sccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"]
+cmake.args = ["-G", "Ninja", "-DCMAKE_C_COMPILER=cl", "-DCMAKE_CXX_COMPILER=cl", "-DCMAKE_C_COMPILER_LAUNCHER=sccache", "-DCMAKE_CXX_COMPILER_LAUNCHER=sccache"]
 
 [[tool.cibuildwheel.overrides]]
 # Use the correct lib file for 3.14t, without this it looks 
