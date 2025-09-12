@@ -462,7 +462,9 @@ cmake.args = [
     "-DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
     "-DCMAKE_EXE_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
     "-DPython3_FIND_STRATEGY=LOCATION",
-    "-DPython3_FIND_ABI=ANY;ANY;ANY;ON"
+    "-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
+    "-DPython3_LIBRARY=python314t.lib",
+    "-DCMAKE_GENERATOR_PLATFORM=x64"
 ]
     # "--debug-output",
     # "--debug-find",
@@ -470,7 +472,3 @@ cmake.args = [
     # "--trace-expand",
     # "--log-level=DEBUG"
 
-[[tool.cibuildwheel.overrides]]
-# Use the correct lib file for 3.14t free-threading build
-select = "cp314t-*"
-environment = { "CMAKE_ARGS" = "-DPython3_FIND_ABI=ANY;ANY;ANY;ON -DPython3_LIBRARY=python314t.lib" }
