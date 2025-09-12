@@ -435,10 +435,8 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = [
     "echo 'Removing Strawberry Perl ccache to avoid conflicts...'",
     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\" ",
-    "echo 'Installing sccache and ninja...'",
-    "choco install sccache ninja",
+    "choco install sccache",
     "sccache --version",
-    "ninja --version"
 ]
 before-test = [
     "echo 'Final sccache statistics:'", 
@@ -447,7 +445,7 @@ before-test = [
 
 [[tool.scikit-build.overrides]]
 # Use Ninja generator on Windows for sccache compatibility  
-if.platform-system = "Windows"
+if.platform-system = "^win32"
 cmake.generator = "Ninja"
 
 [[tool.cibuildwheel.overrides]]
