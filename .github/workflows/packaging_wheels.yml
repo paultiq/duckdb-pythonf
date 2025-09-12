@@ -97,8 +97,10 @@ jobs:
           version: "0.8.16"
           enable-cache: true
           activate-environment: true
-          cache-suffix: -3.11-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          python-version: 3.11  # this is only for the host, cibuildwheel will install the target python versions in the container
+          cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          python-version: ${{
+            fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
+            }}
       - name: Install cibuildwheel
         run: |
           echo "Installed uv version is ${{ steps.setup-uv.outputs.uv-version }}"
