@@ -109,8 +109,14 @@ jobs:
         shell: cmd
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
-            set VSCMD_ARG_TGT_ARCH=x64
-            call "%%i\Common7\Tools\VsDevCmd.bat"
+            echo Setting up x64 build environment...
+            call "%%i\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64
+            echo Verifying compiler paths:
+            where cl
+            cl 2>&1 | findstr "Version"
+            echo VSCMD_ARG_TGT_ARCH=%VSCMD_ARG_TGT_ARCH%
+            echo VCINSTALLDIR=%VCINSTALLDIR%
+            echo Platform=%Platform%
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
           )
         env:
