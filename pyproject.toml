@@ -446,7 +446,7 @@ before-test = [
 [[tool.scikit-build.overrides]]
 # Use Ninja generator on Windows for sccache compatibility  
 if.platform-system = "^win32"
-cmake.generator = "Ninja"
+cmake.args = ["-G", "Ninja"]
 
 [[tool.cibuildwheel.overrides]]
 # Use the correct lib file for 3.14t, without this it looks 
