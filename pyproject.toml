@@ -398,14 +398,3 @@ before-build = ["brew install ccache"]
 
 [tool.cibuildwheel.windows]
 before-build = ["choco install ccache"]
-environment = { DISTUTILS_USE_SDK = "1", MSSdk = "1" }
-
-[[tool.cibuildwheel.overrides]]
-# Use the correct lib file for 3.14t, without this it looks 
-# for python314.lib
-select = "cp314t-*"
-environment = { 
-    CMAKE_ARGS = "-DPython_LIBRARY_RELEASE=python314t.lib", 
-    DISTUTILS_USE_SDK = "1", 
-    MSSdk = "1" 
-}
