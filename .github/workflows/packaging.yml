@@ -74,6 +74,8 @@ jobs:
   build_wheels:
     name: Build and test releases
     uses: ./.github/workflows/packaging_wheels.yml
+    permissions: { id-token: write, contents: read }
+    secrets: inherit
     with:
       minimal: false
       testsuite: all
