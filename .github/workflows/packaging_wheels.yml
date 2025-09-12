@@ -65,10 +65,10 @@ jobs:
     steps:
       - name: Setup S3 Cache
         uses: aws-actions/configure-aws-credentials@v4
-        if: ${{ false }}
+        if: ${{ always() && false }}
         with: { role-to-assume: ${{ secrets.AWS_ROLE_ARN }}, aws-region: us-east-1 }
       - name: Setup GHA Cache
-        if: ${{ false }}
+        if: ${{ always() && false }}
         uses: actions/github-script@v7sccache_for_paulbuilds
         with:
           script: |
