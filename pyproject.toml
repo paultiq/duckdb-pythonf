@@ -457,7 +457,7 @@ cmake.args = ["-G", "Ninja"]
 # for python314.lib
 select = "cp314t-*"
 environment = { 
-    CMAKE_ARGS = "-DPython_LIBRARY_RELEASE=python314t.lib", 
-    DISTUTILS_USE_SDK = "1", 
-    MSSdk = "1" 
+    "CMAKE_ARGS" = "-DPython_LIBRARY_RELEASE=python314t.lib", 
+    "DISTUTILS_USE_SDK" = "1", 
+    "MSSdk" = "1" 
 }
