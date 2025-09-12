@@ -449,7 +449,7 @@ before-test = [
 [[tool.scikit-build.overrides]]
 # Regular Windows builds (non-free-threading)
 if.platform-system = "^win32"
-if.implementation = "!cpython-freethreading"
+if.abi-flags = ""
 cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
@@ -472,8 +472,7 @@ cmake.args = [
 # The LIBRARY is because it picks up python314.lib, instead of python314t.lib
 # TODO: Dynamically add the "t" for future versions (ie: python315t)
 if.platform-system = "^win32"
-if.python-version = "==3.14.*"
-if.implementation = "cpython-freethreading"
+if.abi-flags = "t"
 cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
