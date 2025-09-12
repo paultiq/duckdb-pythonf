@@ -105,6 +105,13 @@ jobs:
         run: |
           echo "Installed uv version is ${{ steps.setup-uv.outputs.uv-version }}"
           uv pip install cibuildwheel==3.1.4
+      - name: Set up Visual Studio environment (Windows)
+        if: matrix.platform.cibw_system == 'win'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do call "%%i\Common7\Tools\VsDevCmd.bat"
+          echo CC=cl >> %GITHUB_ENV%
+          echo CXX=cl >> %GITHUB_ENV%
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
         run: uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
         env:
