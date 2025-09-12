@@ -30,6 +30,7 @@ jobs:
     permissions:
       actions: write  # For GitHub Actions cache write access
       id-token: write
+      contents: read
     strategy:
       fail-fast: false
       matrix:
