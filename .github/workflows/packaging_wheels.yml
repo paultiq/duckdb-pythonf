@@ -97,14 +97,14 @@ jobs:
           version: "0.8.16"
           enable-cache: true
           activate-environment: true
-          cache-suffix: -3.13-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          cache-suffix: -3.11-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           python-version: 3.11  # this is only for the host, cibuildwheel will install the target python versions in the container
       - name: Install cibuildwheel
         run: |
           echo "Installed uv version is ${{ steps.setup-uv.outputs.uv-version }}"
           uv pip install cibuildwheel==3.1.4
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
-        run: uv run python -m cibuildwheel --output-dir wheelhouse
+        run: uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
