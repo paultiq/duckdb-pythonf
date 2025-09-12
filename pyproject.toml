@@ -435,8 +435,10 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = [
     "echo 'Removing Strawberry Perl ccache to avoid conflicts...'",
     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\" ",
-    "choco install sccache",
-    "sccache --version"
+    "echo 'Installing sccache and ninja...'",
+    "choco install sccache ninja",
+    "sccache --version",
+    "ninja --version"
 ]
 before-test = [
     "echo 'Final sccache statistics:'", 
