@@ -52,9 +52,9 @@ on:
         required: false
         type: string
 
-concurrency:
-  group: packaging-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: packaging-${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 defaults:
   run:
@@ -63,6 +63,8 @@ defaults:
 jobs:
   build_sdist:
     name: Build an sdist and determine versions
+    if: false # Disable for dev
+
     uses: ./.github/workflows/packaging_sdist.yml
     with:
       testsuite: all

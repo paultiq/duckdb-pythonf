@@ -14,9 +14,9 @@ on:
       - '!.github/workflows/on_push.yml'
       - '!.github/workflows/coverage.yml'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   submodule_sanity_guard:
