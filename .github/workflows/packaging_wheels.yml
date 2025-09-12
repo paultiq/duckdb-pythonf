@@ -29,7 +29,7 @@ jobs:
     name: 'Wheel: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}'
     permissions:
       actions: write  # For GitHub Actions cache write access
-      contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix:
