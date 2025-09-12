@@ -419,20 +419,34 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = ["brew install sccache"]
 
 [tool.cibuildwheel.windows]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
     "choco install sccache",
     "echo 'sccache installation complete, verifying...'",
     "sccache --version",
     "where sccache",
-    "where ccache",
-    "sccache --show-stats", 
-    "echo 'Adding sccache to front of PATH to override ccache...'",
-    "set PATH=C:\\ProgramData\\chocolatey\\lib\\sccache\\tools;%PATH%",
-    "where sccache",
-    "echo 'CMAKE will auto-detect sccache (should override ccache)'",
-    "echo 'SCCACHE_LOG=debug - debug logging enabled'",
-    "echo 'SCCACHE_GHA_ENABLED=on - GitHub Actions cache enabled'",
-    "echo 'Starting build with sccache...'"
+    "echo 'Verifying sccache executable path...'",
+    "dir \"C:\\ProgramData\\Chocolatey\\bin\\sccache.exe\"",
+    "\"C:\\ProgramData\\Chocolatey\\bin\\sccache.exe\" --version",
+    "echo 'Testing sccache GitHub Actions cache access...'",
+    "set SCCACHE_LOG=debug",
+    "sccache --show-stats",
+    "echo 'Testing sccache compilation with cl.exe...'",
+    "echo int main(){return 0;} > test.c",
+    "sccache cl.exe /c test.c /Fo:test.obj 2>&1 || echo 'sccache cl.exe test failed'",
+    "sccache --show-stats",
+    "if exist test.c del test.c",
+    "if exist test.obj del test.obj",
+    "echo 'Testing sccache compilation with gcc...'",
+    "echo int main(){return 0;} > test.c",
+    "sccache gcc -c test.c -o test.o 2>&1 || echo 'sccache gcc test failed'",
+    "sccache --show-stats",
+    "if exist test.c del test.c",
+    "if exist test.o del test.o",
+    "echo 'CMAKE compiler launcher verification:'",
+    "echo CMAKE_C_COMPILER_LAUNCHER=%CMAKE_C_COMPILER_LAUNCHER%",
+    "echo CMAKE_CXX_COMPILER_LAUNCHER=%CMAKE_CXX_COMPILER_LAUNCHER%",
+    "echo 'Sccache pre-build verification complete'"
 ]
 before-test = [
     "echo 'Final sccache statistics:'", 
