@@ -34,12 +34,12 @@ jobs:
       matrix:
         python: [ cp313, cp314t ]  # cp39, cp310, cp311, cp312, cp313, cp314, cp314t 
         platform:
-          - { os: windows-2025,     arch: amd64,      cibw_system: win }
+          #- { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
-          - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
-          - { os: macos-15,         arch: arm64,      cibw_system: macosx }
-          - { os: macos-15,         arch: universal2, cibw_system: macosx }
-          - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
+          # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
+          # - { os: macos-15,         arch: arm64,      cibw_system: macosx }
+          # - { os: macos-15,         arch: universal2, cibw_system: macosx }
+          # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
         minimal:
           - ${{ inputs.minimal }}
         exclude:
@@ -63,6 +63,18 @@ jobs:
       PYTHON_GIL: "1"  
       # Needed for 3.14t to indicate that it's OK to enable the GIL. Noop for other versions.
     steps:
+      - name: Setup S3 Cache
+        uses: aws-actions/configure-aws-credentials@v4
+        if: true
+        with: { role-to-assume: ${{ secrets.AWS_ROLE_ARN }}, aws-region: us-east-1 }
+      - name: Setup GHA Cache
+        if: false
+        uses: actions/github-script@v7sccache_for_paulbuilds
+        with:
+          script: |
+            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          # SCCACHE_GHA_ENABLED=on
       - name: Checkout DuckDB Python
         uses: actions/checkout@v5
         with:
@@ -74,12 +86,7 @@ jobs:
       #   uses: mozilla-actions/sccache-action@v0.0.9
       #   with:
       #     version: "v0.10.0"
-      - name: Configure Cache Env
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
       - name: Checkout DuckDB
         shell: bash
         if: ${{ inputs.duckdb-sha }}
@@ -129,7 +136,9 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT_LINUX: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" 
+          CIBW_ENVIRONMENT_LINUX: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_BUCKET=${{ secrets.SCCACHE_BUCKET }} SCCACHE_REGION=${{ secrets.SCCACHE_REGION }} 
+          CIBW_ENVIRONMENT_PASS_LINUX: AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_REGION AWS_DEFAULT_REGION
+
           CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
           CIBW_BUILD_VERBOSITY: 3
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
