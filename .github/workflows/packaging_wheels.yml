@@ -139,7 +139,8 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT_LINUX: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_BUCKET=${{ secrets.SCCACHE_BUCKET }} SCCACHE_REGION=${{ secrets.SCCACHE_REGION }} SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1 SCCACHE_READ_ONLY=0
+          # SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1
+          CIBW_ENVIRONMENT_LINUX: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" SCCACHE_BUCKET=${{ secrets.SCCACHE_BUCKET }} SCCACHE_REGION=${{ secrets.SCCACHE_REGION }}
           CIBW_ENVIRONMENT_PASS_LINUX: AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_REGION AWS_DEFAULT_REGION
 
           CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
