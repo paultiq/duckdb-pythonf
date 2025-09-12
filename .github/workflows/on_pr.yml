@@ -24,6 +24,8 @@ jobs:
     uses: ./.github/workflows/submodule_sanity.yml
 
   packaging_test:
+    permissions: { id-token: write, contents: read }
+    secrets: inherit
     name: Build a minimal set of packages and run all tests on them
     needs: submodule_sanity_guard
     # Skip packaging tests for draft PRs
