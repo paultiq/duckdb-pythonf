@@ -111,6 +111,14 @@ jobs:
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSINSTALLDIR=%%i
           call "%VSINSTALLDIR%\Common7\Tools\VsDevCmd.bat"
+          echo "After VsDevCmd - checking PATH contains Visual Studio:"
+          echo %PATH% | findstr /i "Microsoft Visual Studio"
+          echo "Checking if cl is available:"
+          where cl
+          echo "Environment variables that should be set:"
+          echo CC=%CC%
+          echo CXX=%CXX%
+          echo LIB=%LIB%
           uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
