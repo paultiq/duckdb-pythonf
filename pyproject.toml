@@ -124,12 +124,12 @@ inherit.cmake.define = "append"
 cmake.define.DISABLE_UNITY = "1"
 
 [[tool.scikit-build.overrides]]
-# Python 3.14t free-threading builds - define Py_GIL_DISABLED
+# Python 3.14t free-threading builds - define Py_GIL_DISABLED and prevent auto-linking
 if.platform-system = "^win32"
 if.abi-flags = "t"
 inherit.cmake.define = "append"
-cmake.define.CMAKE_C_FLAGS = "/DPy_GIL_DISABLED"
-cmake.define.CMAKE_CXX_FLAGS = "/DPy_GIL_DISABLED"
+cmake.define.CMAKE_C_FLAGS = "/DPy_GIL_DISABLED /DPY_NO_LINK_LIB"
+cmake.define.CMAKE_CXX_FLAGS = "/DPy_GIL_DISABLED /DPY_NO_LINK_LIB"
 
 [tool.scikit-build.sdist]
 include = [
