@@ -432,18 +432,24 @@ before-build = [
 
 [tool.cibuildwheel.windows]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+# if ccache is in the path, it's chosen before sccache
+# and, uninstalling strawberry is much slower than just deleting the entry
 before-build = [
     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\"",
     "choco install sccache",
     "sccache --version"
 ]
 before-test = [
-    "echo 'Final sccache statistics:'", 
     "sccache --show-stats"
 ]
 
 [[tool.scikit-build.overrides]]
-# Use Ninja generator on Windows with embedded debug info for sccache compatibility
+# To get sccache to work, needed a few things
+# Ninja
+# /Z7 so we don't write parallel PDBs
+# The empty COMPILER_LAUNCHERS are because otherwise sccache is called twice (sccache sccache cl.exe ...)
+# The LIBRARY is because it picks up python314.lib, instead of python314t.lib
+# TODO: Dynamically add the "t" for future versions (ie: python315t)
 if.platform-system = "^win32"
 cmake.args = [
     "-G", "Ninja",
@@ -454,7 +460,9 @@ cmake.args = [
     "-DCMAKE_C_COMPILER_LAUNCHER=",
     "-DCMAKE_CXX_COMPILER_LAUNCHER=",
     "-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
-    "-DPython3_LIBRARY=python314t.lib"
+    "-DPython3_LIBRARY_RELEASE=python314t.lib",
+    "-DPython_LIBRARY=python314t.lib",
+    "-DPython_LIBRARY_RELEASE=python314t.lib"
 ]
 
 [[tool.cibuildwheel.overrides]]
