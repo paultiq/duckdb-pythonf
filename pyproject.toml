@@ -435,8 +435,7 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = [
     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\"",
     "choco install sccache",
-    "sccache --version",
-    "echo 'Verifying cl is available:' && where cl"
+    "sccache --version"
 ]
 before-test = [
     "echo 'Final sccache statistics:'", 

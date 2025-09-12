@@ -109,9 +109,12 @@ jobs:
         if: matrix.platform.cibw_system == 'win'
         shell: cmd
         run: |
-          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do call "%%i\Common7\Tools\VsDevCmd.bat"
-          echo CC=cl >> %GITHUB_ENV%
-          echo CXX=cl >> %GITHUB_ENV%
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set VSINSTALLDIR=%%i
+          for /f "usebackq tokens=*" %%i in (`dir /b "%VSINSTALLDIR%\VC\Tools\MSVC"`) do set MSVCVER=%%i
+          set CLPATH=%VSINSTALLDIR%\VC\Tools\MSVC\%MSVCVER%\bin\Hostx64\x64\cl.exe
+          echo CC=%CLPATH% >> %GITHUB_ENV%
+          echo CXX=%CLPATH% >> %GITHUB_ENV%
+          echo Compiler paths set: %CLPATH%
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
         run: uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
         env:
