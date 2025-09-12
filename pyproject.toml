@@ -449,7 +449,7 @@ before-test = [
 [[tool.scikit-build.overrides]]
 # Regular Windows builds (non-free-threading)
 if.platform-system = "^win32"
-if.python-version = "!~3.14t"
+if.implementation = "!cpython-freethreading"
 cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
