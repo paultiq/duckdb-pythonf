@@ -52,15 +52,14 @@ jobs:
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
-        sccache --show-stats &&
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
         uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs 
       SCCACHE_GHA_ENABLED: "on"
       SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
-      ACTIONS_CACHE_SERVICE_V2: "1"
-      PYTHON_GIL: "1" 
+      ACTIONS_CACHE_SERVICE_V2: "1"  
+      PYTHON_GIL: "1"  # Needed for 3.14t to indicate that it's OK to enable the GIL. Noop for other versions.
     steps:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v5
@@ -110,10 +109,10 @@ jobs:
         run: |
           for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
             call "%%i\Common7\Tools\VsDevCmd.bat"
-            echo "After VsDevCmd - checking PATH contains Visual Studio:"
-            echo !PATH! | findstr /i "Microsoft Visual Studio"
-            echo "Checking if cl is available:"
-            where cl
+            # echo "After VsDevCmd - checking PATH contains Visual Studio:"
+            # echo !PATH! | findstr /i "Microsoft Visual Studio"
+            # echo "Checking if cl is available:"
+            # where cl
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
           )
         env:
@@ -131,7 +130,6 @@ jobs:
           CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
           CIBW_BUILD_VERBOSITY: 3
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
-            echo "Final sccache stats:"
             sccache --show-stats
             auditwheel repair -w {dest_dir} {wheel}
       - name: Upload wheel
