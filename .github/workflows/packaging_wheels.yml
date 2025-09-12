@@ -80,41 +80,6 @@ jobs:
           script: |
             core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
-      - name: Install System Dependencies (APT - Ubuntu/Debian)
-        if: steps.detect-pm.outputs.package_manager == 'apt'
-        run: |
-          echo "Installing build dependencies with APT"
-          sudo apt update
-          sudo apt-get install -y \
-            build-essential \
-            cmake \
-            git \
-            wget \
-            curl \
-            pkg-config \
-            libbz2-dev \
-            libffi-dev \
-            libgdbm-dev \
-            libgdbm-compat-dev \
-            liblzma-dev \
-            libncurses5-dev \
-            libreadline6-dev \
-            libsqlite3-dev \
-            libssl-dev \
-            lzma \
-            lzma-dev \
-            tk-dev \
-            uuid-dev \
-            zlib1g-dev \
-            clang \
-            llvm
-          echo "APT package installation completed"
-      # - name: Cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       ${{ runner.home }}/.cache/uv
-      #     key: build-dir-${{ matrix.python }}-${{ runner.os }}-${{ hashFiles('**/pyproject.toml') }}
       - name: Checkout DuckDB
         shell: bash
         if: ${{ inputs.duckdb-sha }}
@@ -122,7 +87,6 @@ jobs:
           cd external/duckdb
           git fetch origin
           git checkout ${{ inputs.duckdb-sha }}
-
       # Make sure that OVERRIDE_GIT_DESCRIBE is propagated to cibuildwhel's env, also when it's running linux builds
       - name: Set OVERRIDE_GIT_DESCRIBE
         if: ${{ inputs.set-version != '' }}
@@ -134,4 +98,17 @@ jobs:
             fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
             }}
           allow-prereleases: true
-      
+      # Install Astral UV, which will be used as build-frontend for cibuildwheel
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.16"
+          enable-cache: true
+          cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          python-version: ${{
+            fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
+            }}
+      - name: Install cibuildwheel
+        run: |
+          uv venv .venv 
+          uv pip install cibuildwheel==3.1.4
+        
