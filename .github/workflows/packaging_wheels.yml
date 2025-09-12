@@ -113,7 +113,6 @@ jobs:
             call "%%i\VC\Auxiliary\Build\vcvars64.bat"
             echo Verifying compiler paths:
             where cl
-            cl 2>&1 | findstr "Version"
             echo VCINSTALLDIR=%VCINSTALLDIR%T
             echo Platform=%Platform%
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
