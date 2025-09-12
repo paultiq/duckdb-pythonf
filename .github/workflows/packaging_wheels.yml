@@ -27,10 +27,12 @@ on:
 jobs:
   build_wheels:
     name: 'Wheel: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}'
+    permissions:
+      actions: write  # For GitHub Actions cache write access
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp39, cp310, cp311, cp312, cp313 ]
+        python: [ cp313, cp314t ]  # cp39, cp310, cp311, cp312, cp313, cp314, cp314t, cp314t
         platform:
           - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
@@ -53,16 +55,31 @@ jobs:
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
-        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
-
+        sccache --show-stats && 
+        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs 
+      SCCACHE_GHA_ENABLED: "on"
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
+      ACTIONS_CACHE_SERVICE_V2: "1"  
+      PYTHON_GIL: "1"  
+      # Needed for 3.14t to indicate that it's OK to enable the GIL. Noop for other versions.
     steps:
       - name: Checkout DuckDB Python
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0
           submodules: true
-
+      # The host doesn't need sccache, only the cibuildwheel container
+      # - name: Setup sccache  # idea from https://github.com/pypa/cibuildwheel/issues/1030
+      #   uses: mozilla-actions/sccache-action@v0.0.9
+      #   with:
+      #     version: "v0.10.0"
+      - name: Configure Cache Env
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       - name: Checkout DuckDB
         shell: bash
         if: ${{ inputs.duckdb-sha }}
@@ -70,25 +87,54 @@ jobs:
           cd external/duckdb
           git fetch origin
           git checkout ${{ inputs.duckdb-sha }}
-
       # Make sure that OVERRIDE_GIT_DESCRIBE is propagated to cibuildwhel's env, also when it's running linux builds
       - name: Set OVERRIDE_GIT_DESCRIBE
         if: ${{ inputs.set-version != '' }}
-        run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }}" >> $GITHUB_ENV
-
+        run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }} SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }}" >> $GITHUB_ENV
       # Install Astral UV, which will be used as build-frontend for cibuildwheel
       - uses: astral-sh/setup-uv@v6
         with:
-          version: "0.7.14"
-          enable-cache: false
+          version: "0.8.16"
+          enable-cache: true
+          activate-environment: true
           cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-
-      - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
-        uses: pypa/cibuildwheel@v3.0
+          python-version: ${{
+            fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
+            }}
+      - name: Install cibuildwheel
+        run: |
+          echo "Installed uv version is ${{ steps.setup-uv.outputs.uv-version }}"
+          uv pip install cibuildwheel==3.1.4
+      - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Windows)
+        if: matrix.platform.cibw_system == 'win'
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+            echo Setting up x64 build environment...
+            call "%%i\VC\Auxiliary\Build\vcvars64.bat"
+            echo Verifying compiler paths:
+            where cl
+            echo VCINSTALLDIR=%VCINSTALLDIR%
+            echo Platform=%Platform%
+            uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
+          )
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-
+          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON
+          CIBW_BUILD_VERBOSITY: 3
+      - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Non-Windows)
+        if: matrix.platform.cibw_system != 'win'
+        run: uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
+          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          CIBW_ENVIRONMENT_LINUX: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" 
+          CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_REPAIR_WHEEL_COMMAND_LINUX: |
+            sccache --show-stats
+            auditwheel repair -w {dest_dir} {wheel}
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
