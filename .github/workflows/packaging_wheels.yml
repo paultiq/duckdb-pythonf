@@ -128,7 +128,7 @@ jobs:
         if: ${{ inputs.set-version != '' }}
         run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }} SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }}" >> $GITHUB_ENV
       - name: Set up Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{
             fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
@@ -138,7 +138,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.8.16"
-          enable-cache: false
+          enable-cache: true
           cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           python-version: ${{
             fromJSON('{"cp39":"3.9","cp310":"3.10","cp311":"3.11","cp312":"3.12","cp313":"3.13","cp314":"3.14","cp314t":"3.14t"}')[matrix.python]
@@ -147,16 +147,16 @@ jobs:
 
           
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel==3.1.4
+        run: uv pip install cibuildwheel==3.1.4
         
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: uv run python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           # SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1
           CIBW_ENVIRONMENT_LINUX: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" 
-          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" CMAKE_ARGS="-DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl" PATH="C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Tools\\MSVC\\14.41.34120\\bin\\Hostx64\\x64;C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin;$PATH"
+          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" CMAKE_C_COMPILER="cl" CMAKE_CXX_COMPILER="cl"
           #  PYTHON_GIL=1
           # SCCACHE_GHA_ENABLED=on ACTIONS_RUNTIME_TOKEN=${{ github.token }} ACTIONS_RESULTS_URL=${{ env.ACTIONS_RESULTS_URL }} ACTIONS_CACHE_SERVICE_V2=1 SCCACHE_C_CUSTOM_CACHE_BUSTER=${{ matrix.python }}-${{ matrix.platform.arch }} #
           CIBW_ENVIRONMENT_MACOS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
