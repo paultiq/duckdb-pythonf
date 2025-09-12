@@ -398,6 +398,11 @@ before-build = [
   "curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz",
   "cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin",
   "which sccache",
+  "echo 'Compiler launcher detection order check:'",
+  "which ccache || echo 'ccache not found'",
+  "which sccache || echo 'sccache not found'", 
+  "echo 'PATH priority test:'",
+  "for prog in ccache sccache; do echo \"$prog: $(which $prog 2>/dev/null || echo 'not found')\"; done",
   "mkdir -p /root/.config/sccache && touch /root/.config/sccache/config",
   "mkdir -p /tmp/sccache-cache",
   "export SCCACHE_DIR=/tmp/sccache-cache",
@@ -416,15 +421,29 @@ before-test = "sccache --show-stats"
 
 [tool.cibuildwheel.macos]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
-before-build = ["brew install sccache"]
+before-build = [
+    "brew install sccache",
+    "echo 'Compiler launcher detection order check:'",
+    "which ccache || echo 'ccache not found'",
+    "which sccache || echo 'sccache not found'",
+    "echo 'PATH priority test:'",
+    "for prog in ccache sccache; do echo \"$prog: $(which $prog 2>/dev/null || echo 'not found')\"; done"
+]
 
 [tool.cibuildwheel.windows]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
 before-build = [
+    "echo 'Removing Strawberry Perl ccache to avoid conflicts...'",
+    "choco uninstall strawberryperl -y --force || echo 'Strawberry Perl not installed or removal failed'",
     "choco install sccache",
     "echo 'sccache installation complete, verifying...'",
     "sccache --version",
     "where sccache",
+    "echo 'Compiler launcher detection order check:'",
+    "where ccache 2>nul || echo 'ccache not found'",
+    "where sccache 2>nul || echo 'sccache not found'",
+    "echo 'PATH priority test:'",
+    "for %p in (ccache.exe sccache.exe) do @(where %p 2>nul && echo %p found) || echo %p not found",
     "echo 'Verifying sccache executable path...'",
     "dir \"C:\\ProgramData\\Chocolatey\\bin\\sccache.exe\"",
     "\"C:\\ProgramData\\Chocolatey\\bin\\sccache.exe\" --version",
