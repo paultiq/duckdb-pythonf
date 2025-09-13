@@ -130,7 +130,6 @@ if.abi-flags = "t"
 inherit.cmake.define = "append"
 cmake.define.CMAKE_C_FLAGS = "/DPy_GIL_DISABLED /DPY_NO_LINK_LIB"
 cmake.define.CMAKE_CXX_FLAGS = "/DPy_GIL_DISABLED /DPY_NO_LINK_LIB"
-cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT = "Embedded"
 
 [tool.scikit-build.sdist]
 include = [
