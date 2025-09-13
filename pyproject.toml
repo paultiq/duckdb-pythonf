@@ -450,10 +450,11 @@ before-test = [
 # Regular Windows builds (non-free-threading)
 if.platform-system = "^win32"
 if.abi-flags = ""
+inherit.cmake.define = "append"
 cmake.args = [
     "-G", "Ninja",
-    #"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
-    #"-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
+    "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+    "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
     "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/Z7",
     "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/Z7",
     "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
@@ -473,6 +474,7 @@ cmake.args = [
 # TODO: Dynamically add the "t" for future versions (ie: python315t)
 if.platform-system = "^win32"
 if.abi-flags = "t"
+inherit.cmake.define = "append"
 cmake.args = [
     "-G", "Ninja",
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
