@@ -475,7 +475,7 @@ if.platform-system = "^win32"
 if.abi-flags = "t"
 cmake.args = [
     "-G", "Ninja",
-    #"-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+    "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
     "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
     "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/Z7 /DPy_GIL_DISABLED",
     "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/Z7 /DPy_GIL_DISABLED",
