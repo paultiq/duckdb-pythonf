@@ -130,6 +130,10 @@ if.abi-flags = "t"
 inherit.cmake.define = "append"
 cmake.define.CMAKE_C_FLAGS="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 cmake.define.CMAKE_CXX_FLAGS="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.args = [
+   "-G", "Ninja",
+   "--log-level=DEBUG",
+]
 
 [tool.scikit-build.sdist]
 include = [
