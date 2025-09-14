@@ -205,7 +205,6 @@ required-environments = [ # ... but do always resolve for all of them
     "python_version >= '3.9' and sys_platform == 'linux' and platform_machine == 'aarch64'",
 ]
 prerelease = "allow" # for 3.14
-constraint-dependencies = ["numpy>=2.4.0.dev0; python_version >= '3.14'"]
 
 # We just need pytorch for tests, wihtout GPU acceleration. PyPI doesn't host a cpu-only version for Linux, so we have
 # to configure the index url for cpu-only pytorch manually
@@ -458,6 +457,9 @@ cmake.define.CMAKE_C_FLAGS_RELWITHDEBINFO="/Z7"
 cmake.define.CMAKE_CXX_FLAGS_RELWITHDEBINFO="/Z7"
 cmake.define.CMAKE_C_FLAGS_DEBUG="/Z7"
 cmake.define.CMAKE_CXX_FLAGS_DEBUG="/Z7"
+cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
+cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "2"
 cmake.args = [
    "-G", "Ninja",
    "--log-level=DEBUG",
@@ -477,6 +479,9 @@ cmake.define.CMAKE_C_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /
 cmake.define.CMAKE_CXX_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_C_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_CXX_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
+cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
+cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "2"
 cmake.args = [
    "-G", "Ninja",
    "--log-level=DEBUG",
