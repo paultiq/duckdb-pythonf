@@ -156,6 +156,18 @@ jobs:
         run: |
           echo "Installed uv version is ${{ steps.setup-uv.outputs.uv-version }}"
           uv pip install cibuildwheel==3.1.4
+      # - name: Setup D: Drive Cache and Temp (Windows)
+      #   if: matrix.platform.cibw_system == 'win'
+      #   shell: pwsh
+      #   run: |
+      #     if (Test-Path "D:\") {
+      #       Write-Host "Setting up cibuildwheel cache and temp on D: drive"
+      #       New-Item -ItemType Directory -Path "D:\cibw-cache" -Force
+      #       New-Item -ItemType Directory -Path "D:\temp" -Force
+      #       Write-Host "Created D:\cibw-cache and D:\temp directories"
+      #     } else {
+      #       Write-Host "D: drive not available, using default cache location"
+      #     }
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Windows)
         if: matrix.platform.cibw_system == 'win'
         shell: cmd
@@ -167,13 +179,21 @@ jobs:
             where cl
             echo VCINSTALLDIR=%VCINSTALLDIR%
             echo Platform=%Platform%
+            if exist D:\ (
+              echo Using D: drive for cibuildwheel cache and temp
+              set CIBW_CACHE_PATH=D:\cibw-cache
+              set TMP=D:\temp
+              set TEMP=D:\temp
+              set TMPDIR=D:\temp
+            )
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
           )
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON
+          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON TMP=D:\temp TEMP=D:\temp TMPDIR=D:\temp
           CIBW_BUILD_VERBOSITY: 3
+          CIBW_CACHE_PATH: D:\cibw-cache
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Non-Windows)
         if: matrix.platform.cibw_system != 'win'
         run: uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
