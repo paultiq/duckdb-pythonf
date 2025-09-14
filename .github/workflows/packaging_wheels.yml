@@ -84,49 +84,6 @@ jobs:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0
           submodules: true
-      - name: Drive and Directory Diagnostics (Windows)
-        if: matrix.platform.cibw_system == 'win'
-        shell: pwsh
-        run: |
-          Write-Host "logical drives:"
-          Get-WmiObject -Class Win32_LogicalDisk | Format-Table DeviceID, Size, FreeSpace, @{Name="SizeGB";Expression={[math]::Round($_.Size/1GB,2)}}, @{Name="FreeGB";Expression={[math]::Round($_.FreeSpace/1GB,2)}} -AutoSize
-          Write-Host ""
-          Write-Host "Checking D: drive existence:"
-          if (Test-Path "D:\") {
-            Write-Host "D: drive exists"
-            $dInfo = Get-WmiObject -Class Win32_LogicalDisk -Filter "DeviceID='D:'"
-            if ($dInfo) {
-              Write-Host "D: drive size: $([math]::Round($dInfo.Size/1GB,2)) GB"
-              Write-Host "D: drive free: $([math]::Round($dInfo.FreeSpace/1GB,2)) GB"
-            }
-          } else {
-            Write-Host "D: drive does not exist"
-          }
-          Write-Host "cwd's:"
-          Write-Host "GITHUB_WORKSPACE: $env:GITHUB_WORKSPACE"
-          Write-Host "RUNNER_TEMP: $env:RUNNER_TEMP"
-          Write-Host "Current PWD: $(Get-Location)"
-          Write-Host "Environment variables analysis:"
-          $workspace = $env:GITHUB_WORKSPACE
-          $temp = $env:RUNNER_TEMP
-          Write-Host "Workspace drive: $($workspace.Substring(0,2))"
-          Write-Host "Temp drive: $($temp.Substring(0,2))"
-      - name: Drive and Directory Diagnostics (Non-Windows)
-        if: matrix.platform.cibw_system != 'win'
-        shell: bash
-        run: |
-          echo "=== Non-Windows Drive Information ==="
-          echo "Filesystem usage:"
-          df -h / || true
-          echo ""
-          echo "Mount points:"
-          mount | grep -E '^/dev' || true
-          echo ""
-          echo "Directory info:"
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          echo "RUNNER_TEMP: $RUNNER_TEMP"
-          echo "Current PWD: $(pwd)"
-          echo "===================="
       # The host doesn't need sccache, only the cibuildwheel container
       # - name: Setup sccache  # idea from https://github.com/pypa/cibuildwheel/issues/1030
       #   uses: mozilla-actions/sccache-action@v0.0.9
@@ -185,6 +142,7 @@ jobs:
               set TMP=D:\temp
               set TEMP=D:\temp
               set TMPDIR=D:\temp
+              mkdir d:\temp
             )
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
           )
