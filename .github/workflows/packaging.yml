@@ -61,14 +61,14 @@ defaults:
     shell: bash
 
 jobs:
-  build_sdist:
-    name: Build an sdist and determine versions
-    uses: ./.github/workflows/packaging_sdist.yml
-    with:
-      testsuite: all
-      duckdb-python-sha: ${{ inputs.duckdb-python-sha != '' && inputs.duckdb-python-sha || github.sha }}
-      duckdb-sha: ${{ inputs.duckdb-sha }}
-      set-version: ${{ inputs.stable-version }}
+# build_sdist:
+  #   name: Build an sdist and determine versions
+  #   uses: ./.github/workflows/packaging_sdist.yml
+  #   with:
+  #     testsuite: all
+  #     duckdb-python-sha: ${{ inputs.duckdb-python-sha != '' && inputs.duckdb-python-sha || github.sha }}
+  #     duckdb-sha: ${{ inputs.duckdb-sha }}
+  #     set-version: ${{ inputs.stable-version }}
 
   build_wheels:
     name: Build and test releases
