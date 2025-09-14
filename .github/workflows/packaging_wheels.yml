@@ -139,17 +139,18 @@ jobs:
             if exist D:\ (
               echo Using D: drive for cibuildwheel cache and temp
               set CIBW_CACHE_PATH=D:\cibw-cache
-              set TMP=D:\temp
-              set TEMP=D:\temp
-              set TMPDIR=D:\temp
+              
               mkdir d:\temp
             )
             uv run --no-sync python -m cibuildwheel --output-dir wheelhouse
           )
+        # set TMP=D:\temp
+        # set TEMP=D:\temp
+        # set TMPDIR=D:\temp TMP=D:\temp TEMP=D:\temp TMPDIR=D:\temp
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON TMP=D:\temp TEMP=D:\temp TMPDIR=D:\temp
+          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON 
           CIBW_BUILD_VERBOSITY: 3
           CIBW_CACHE_PATH: D:\cibw-cache
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Non-Windows)
