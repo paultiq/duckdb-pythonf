@@ -469,18 +469,20 @@ cmake.args = [
 if.platform-system = "^win32"
 if.abi-flags = "t"
 inherit.cmake.define = "append"
-cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT_RELWITHDEBINFO="Embedded"
-cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT_DEBUG="Embedded"
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
 cmake.define.CMAKE_C_FLAGS_RELEASE="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 cmake.define.CMAKE_CXX_FLAGS_RELEASE="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 cmake.define.CMAKE_C_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_CXX_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_C_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_CXX_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
-
-# for sccache
 cmake.define.CMAKE_C_COMPILER_LAUNCHER = ""
 cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = ""
+cmake.args = [
+   "-G", "Ninja",
+   "--log-level=DEBUG",
+]
+# for sccache
 
 # cmake.define.CMAKE_BUILD_TYPE="Release"
 # cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "2"
@@ -489,10 +491,7 @@ cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = ""
 # Debugging 
 # cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
 # cmake.define.CMAKE_RULE_MESSAGES = "ON"
-# cmake.args = [
-#    "-G", "Ninja",
-#    "--log-level=DEBUG",
-# ]
+
 
 
 #    "--",  # Pass remaining args to MSBuild
