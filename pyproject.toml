@@ -453,16 +453,17 @@ before-test = [
 if.platform-system = "^win32"
 if.abi-flags = ""
 inherit.cmake.define = "append"
+cmake.define.CMAKE_BUILD_TYPE=""
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+cmake.define.CMAKE_C_FLAGS_RELWITHDEBINFO="/Z7"
+cmake.define.CMAKE_CXX_FLAGS_RELWITHDEBINFO="/Z7"
+cmake.define.CMAKE_C_FLAGS_DEBUG="/Z7"
+cmake.define.CMAKE_CXX_FLAGS_DEBUG="/Z7"
+cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
 cmake.args = [
-    "-G", "Ninja",
-    "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT_RELWITHDEBINFO=Embedded",
-    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/Z7",
-    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/Z7",
-    "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
-    "-DCMAKE_C_COMPILER_LAUNCHER=",
-    "-DCMAKE_CXX_COMPILER_LAUNCHER=",
-    #"-DCORE_EXTENSIONS=",
-    #"-DBUILD_UNITTESTS=OFF"
+   "-G", "Ninja",
+   "--log-level=DEBUG",
 ]
 
 [[tool.scikit-build.overrides]]
