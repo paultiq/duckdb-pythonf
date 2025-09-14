@@ -458,8 +458,6 @@ cmake.define.CMAKE_C_FLAGS_RELWITHDEBINFO="/Z7"
 cmake.define.CMAKE_CXX_FLAGS_RELWITHDEBINFO="/Z7"
 cmake.define.CMAKE_C_FLAGS_DEBUG="/Z7"
 cmake.define.CMAKE_CXX_FLAGS_DEBUG="/Z7"
-cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
-cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
 cmake.args = [
    "-G", "Ninja",
    "--log-level=DEBUG",
@@ -479,8 +477,6 @@ cmake.define.CMAKE_C_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /
 cmake.define.CMAKE_CXX_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_C_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_CXX_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
-cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
-cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
 cmake.args = [
    "-G", "Ninja",
    "--log-level=DEBUG",
