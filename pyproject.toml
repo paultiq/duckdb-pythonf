@@ -466,27 +466,26 @@ cmake.args = [
 
 [[tool.scikit-build.overrides]]
 # Free-threading Windows builds (Python 3.14t)
-# To get sccache to work, needed a few things
-# Ninja
-# /Z7 so we don't write parallel PDBs
 # The empty COMPILER_LAUNCHERS are because otherwise sccache is called twice (sccache sccache cl.exe ...)
-# The LIBRARY is because it picks up python314.lib, instead of python314t.lib
-# TODO: Dynamically add the "t" for future versions (ie: python315t)
 if.platform-system = "^win32"
 if.abi-flags = "t"
 inherit.cmake.define = "append"
-cmake.define.CMAKE_BUILD_TYPE="RelWithDebInfo"
-# Alternative to FS is embedded / Z7
+cmake.define.CMAKE_BUILD_TYPE="Release"
 cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-cmake.define.CMAKE_C_FLAGS="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
-cmake.define.CMAKE_CXX_FLAGS="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
+cmake.define.CMAKE_C_FLAGS_RELEASE="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS_RELEASE="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_C_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
+cmake.define.CMAKE_CXX_FLAGS_RELWITHDEBINFO="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
+# for sccache
+cmake.define.CMAKE_C_COMPILER_LAUNCHER = ""
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = ""
+cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "3"
+cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /maxcpucount:6" 
+# /verbosity:diagnostic /detailedsummary"
+# Debugging 
 # cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
 # cmake.define.CMAKE_RULE_MESSAGES = "ON"
 
-cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /maxcpucount:6" # /verbosity:diagnostic /detailedsummary"
-cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "3"  # Adjust based on your CPU cores
-cmake.define.CMAKE_C_COMPILER_LAUNCHER = ""
-cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = ""
 
 #    "--",  # Pass remaining args to MSBuild
 #    "/verbosity:diagnostic",
