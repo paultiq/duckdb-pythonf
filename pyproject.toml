@@ -227,8 +227,8 @@ torchvision = [ { index = "pytorch-cpu" } ]
 stubdeps = [ # dependencies used for typehints in the stubs
     "fsspec",
     "pandas",
-    "polars",
-    "pyarrow",
+    "polars; python_version < '3.14'",
+    "pyarrow; python_version < '3.14'",
 ]
 test = [ # dependencies used for running tests
     "pytest",
@@ -475,18 +475,20 @@ cmake.args = [
 if.platform-system = "^win32"
 if.abi-flags = "t"
 inherit.cmake.define = "append"
-cmake.args = [
-    "-G", "Ninja",
-    # sccache related settings - can't use PDBs due to concurrent writes
-    "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
-    "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
-    "-DCMAKE_C_COMPILER_LAUNCHER=", 
-    "-DCMAKE_CXX_COMPILER_LAUNCHER=",
-    # Need Py_GIL_DISABLED to acknowledge the free threading build
-    # Need Py_MOD_GIL_USED since extension needs GIL
-    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED",
-    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
-]
+cmake.define.CMAKE_BUILD_TYPE="Release"
+cmake.define.CMAKE_C_FLAGS="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+# cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
+# cmake.define.CMAKE_RULE_MESSAGES = "ON"
+
+cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /maxcpucount:6" # /verbosity:diagnostic /detailedsummary"
+cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "3"  # Adjust based on your CPU cores
+cmake.define.CMAKE_C_COMPILER_LAUNCHER = ""
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER = ""
+
+#    "--",  # Pass remaining args to MSBuild
+#    "/verbosity:diagnostic",
+#    "/detailedsummary"
 
     #    "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
     #"-DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
