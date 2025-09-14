@@ -211,7 +211,7 @@ required-environments = [ # ... but do always resolve for all of them
     "python_version >= '3.9' and sys_platform == 'linux' and platform_machine == 'x86_64'",
     "python_version >= '3.9' and sys_platform == 'linux' and platform_machine == 'aarch64'",
 ]
-prerelease = "if-necessary-or-explicit"
+prerelease = "allow"
 constraint-dependencies = ["numpy>=2.4.0.dev0; python_version >= '3.14'"]
 
 # We just need pytorch for tests, wihtout GPU acceleration. PyPI doesn't host a cpu-only version for Linux, so we have
