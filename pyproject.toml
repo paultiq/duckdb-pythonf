@@ -477,20 +477,21 @@ if.abi-flags = "t"
 inherit.cmake.define = "append"
 cmake.args = [
     "-G", "Ninja",
+    # sccache related settings - can't use PDBs due to concurrent writes
     "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
     "-DCMAKE_MSVC_DEBUG_INFORMATION_FORMAT=Embedded",
-    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/Z7 /DPy_GIL_DISABLED",
-    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/Z7 /DPy_GIL_DISABLED",
-    "-DCMAKE_C_COMPILER_LAUNCHER=",
+    "-DCMAKE_C_COMPILER_LAUNCHER=", 
     "-DCMAKE_CXX_COMPILER_LAUNCHER=",
+    # Need Py_GIL_DISABLED to acknowledge the free threading build
+    # Need Py_MOD_GIL_USED since extension needs GIL
+    "-DCMAKE_C_FLAGS_RELWITHDEBINFO=/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED",
+    "-DCMAKE_CXX_FLAGS_RELWITHDEBINFO=/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 ]
-    #    "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
 
+    #    "-DCMAKE_SYSTEM_PROCESSOR=AMD64",
     #"-DCMAKE_SHARED_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
     #"-DCMAKE_EXE_LINKER_FLAGS=/NODEFAULTLIB:python314.lib",
-    
-    #    "-DCMAKE_LIBRARY_PATH=${Python3_LIBRARY_DIRS}",
-
+    #    "-DCMAKE_LIBRARY_PATH=${Python3_LIBRARY_DIRS}"
     #"-DPython3_FIND_STRATEGY=LOCATION",
     #"-DPython3_FIND_ABI=ANY;ANY;ANY;ON",
     #"-DPython3_LIBRARY_RELEASE=python314t.lib",
