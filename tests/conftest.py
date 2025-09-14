@@ -53,6 +53,17 @@ def import_pandas():
 def pytest_addoption(parser):
     parser.addoption("--skiplist", action="append", nargs="+", type=str, help="skip listed tests")
 
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_call(item):
+    """Convert pandas requirement exceptions to skips"""
+    outcome = yield
+    try:
+        outcome.get_result()
+    except Exception as e:
+        if "'pandas' is required for this operation but it was not installed" in str(e):
+            pytest.skip("pandas not available - test requires pandas functionality")
+
+
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item):
