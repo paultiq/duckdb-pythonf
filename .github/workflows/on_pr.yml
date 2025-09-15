@@ -12,6 +12,7 @@ on:
       - '.github//**'
       - '!.github/workflows/on_push.yml'
       - '!.github/workflows/coverage.yml'
+    workflow_dispatch:
 
 # concurrency:
 #   group: ${{ github.workflow }}-${{ github.ref }}
