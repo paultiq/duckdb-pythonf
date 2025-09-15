@@ -2,8 +2,7 @@ name: Tests and builds on PR
 on:
   pull_request:
     branches:
-      - main
-      - v*.*-*
+      - '**'
     types: [opened, reopened, ready_for_review, converted_to_draft, synchronize]
     paths-ignore:
       - '**.md'
