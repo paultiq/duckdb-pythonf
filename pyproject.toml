@@ -387,11 +387,7 @@ enable = ["cpython-freethreading", "cpython-prerelease"]
 
 [tool.cibuildwheel.linux]
 environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
-before-build = [
-  "if [ \"$(uname -m)\" = \"aarch64\" ]; then ARCH=aarch64; else ARCH=x86_64; fi",
-  "curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz",
-  "cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin",
-  "sccache --show-stats"]
+before-build = ["yum install -y sccache", "sccache --show-stats"]
 before-test = ["sccache --show-stats"]
 
 [tool.cibuildwheel.macos]
@@ -403,19 +399,3 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = [
      "del \"C:\\Strawberry\\c\\bin\\ccache.exe\"",
      "choco install sccache"]
-
-[[tool.scikit-build.overrides]]
-# Windows Free-Threading 
-if.platform-system = "^win32"
-if.abi-flags = "t"
-inherit.cmake.define = "append"
-cmake.define.CMAKE_BUILD_TYPE=""
-cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
-cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
-cmake.args = [
-   "-G", "Ninja",
-   "--log-level=DEBUG",
-]
-cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
-cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
