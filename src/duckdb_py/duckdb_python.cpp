@@ -1018,7 +1018,7 @@ static void RegisterExpectedResultType(py::handle &m) {
 	expected_return_type.export_values();
 }
 
-PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m,
+PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m, py::mod_gil_not_used(),
                 py::multiple_interpreters::not_supported()) { // NOLINT
 	// Initialize module state completely during initialization
 	// PEP 489 wants calls for state to be module local, but currently
