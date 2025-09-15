@@ -242,10 +242,10 @@ test = [ # dependencies used for running tests
     "pytest",
     "pytest-reraise",
     "pytest-timeout",
-    # "pytest-randomly",      # Ensures non-deterministic test order
+    "pytest-randomly",      # Ensures non-deterministic test order
     "pytest-xdist",      # Parallel tests (separate processes)
     "pytest-timestamper",
-    # "pytest-run-parallel",  # For free-threading testing
+    "pytest-run-parallel",  # For free-threading testing
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
@@ -489,15 +489,17 @@ cmake.define.CMAKE_C_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_CXX_FLAGS_DEBUG="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED /Z7"
 cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
 cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
-cmake.args = [
-   "-G", "Ninja",
-   "--log-level=DEBUG",
-]
+cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "4"
+cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /maxcpucount:4" 
+#cmake.args = [
+#   "-G", "Ninja",
+#   "--log-level=DEBUG",
+#]
 # for sccache
 
 # cmake.define.CMAKE_BUILD_TYPE="Release"
-# cmake.define.CMAKE_BUILD_PARALLEL_LEVEL = "2"
-# cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /maxcpucount:2" 
+# 
+# 
 # /verbosity:diagnostic /detailedsummary"
 # Debugging 
 # cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
