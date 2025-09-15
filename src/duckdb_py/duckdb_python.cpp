@@ -20,6 +20,7 @@
 #include "duckdb_python/pybind11/conversions/python_udf_type_enum.hpp"
 #include "duckdb_python/pybind11/conversions/python_csv_line_terminator_enum.hpp"
 #include "duckdb/common/enums/statement_type.hpp"
+#include "duckdb_python/module_state.hpp"
 
 #include "duckdb.hpp"
 
@@ -1007,7 +1008,15 @@ static void RegisterExpectedResultType(py::handle &m) {
 	expected_return_type.export_values();
 }
 
-PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m) { // NOLINT
+PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m,
+                py::multiple_interpreters::not_supported()) { // NOLINT
+	// Initialize module state completely during initialization
+	auto state = make_uniq<DuckDBPyModuleState>();
+
+	// https://pybind11.readthedocs.io/en/stable/advanced/misc.html#module-destructors
+	auto capsule = py::capsule(state.get(), [](void *p) { delete static_cast<DuckDBPyModuleState *>(p); });
+	m.attr("__duckdb_state") = capsule;
+
 	py::enum_<duckdb::ExplainType>(m, "ExplainType")
 	    .value("STANDARD", duckdb::ExplainType::EXPLAIN_STANDARD)
 	    .value("ANALYZE", duckdb::ExplainType::EXPLAIN_ANALYZE)
@@ -1046,9 +1055,10 @@ PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m) { // NOLINT
 	m.attr("__version__") = std::string(DuckDB::LibraryVersion()).substr(1);
 	m.attr("__standard_vector_size__") = DuckDB::StandardVectorSize();
 	m.attr("__git_revision__") = DuckDB::SourceID();
-	m.attr("__interactive__") = DuckDBPyConnection::DetectAndGetEnvironment();
-	m.attr("__jupyter__") = DuckDBPyConnection::IsJupyter();
-	m.attr("__formatted_python_version__") = DuckDBPyConnection::FormattedPythonVersion();
+	// Use state directly during initialization - no GetModuleState() calls needed
+	m.attr("__interactive__") = state->environment != PythonEnvironmentType::NORMAL;
+	m.attr("__jupyter__") = state->environment == PythonEnvironmentType::JUPYTER;
+	m.attr("__formatted_python_version__") = state->formatted_python_version;
 	m.def("default_connection", &DuckDBPyConnection::DefaultConnection,
 	      "Retrieve the connection currently registered as the default to be used by the module");
 	m.def("set_default_connection", &DuckDBPyConnection::SetDefaultConnection,
@@ -1084,6 +1094,8 @@ PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m) { // NOLINT
 		DuckDBPyConnection::Cleanup();
 	};
 	m.add_object("_clean_default_connection", py::capsule(clean_default_connection));
+
+	state.release(); // Transfer ownership to capsule
 }
 
 } // namespace duckdb
