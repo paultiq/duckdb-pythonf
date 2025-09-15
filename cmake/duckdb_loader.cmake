@@ -89,6 +89,19 @@ function(_duckdb_validate_jemalloc_config)
         return()
     endif()
 
+    # Always exclude jemalloc on Windows
+    if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+        message(WARNING
+                "jemalloc extension is not supported on Windows.\n"
+                "Removing jemalloc from extension list.")
+        # Remove jemalloc from the extension list
+        string(REPLACE "jemalloc" "" CORE_EXTENSIONS_FILTERED "${CORE_EXTENSIONS}")
+        string(REGEX REPLACE ";+" ";" CORE_EXTENSIONS_FILTERED "${CORE_EXTENSIONS_FILTERED}")
+        string(REGEX REPLACE "^;|;$" "" CORE_EXTENSIONS_FILTERED "${CORE_EXTENSIONS_FILTERED}")
+        set(CORE_EXTENSIONS "${CORE_EXTENSIONS_FILTERED}" PARENT_SCOPE)
+        return()
+    endif()
+
     # If we're on Linux then using jemalloc is fine, otherwise we only allow it in debug builds
     if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
         set(is_debug_build FALSE)
