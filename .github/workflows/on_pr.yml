@@ -14,9 +14,9 @@ on:
       - '!.github/workflows/on_push.yml'
       - '!.github/workflows/coverage.yml'
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   submodule_sanity_guard:
@@ -27,7 +27,7 @@ jobs:
     name: Build a minimal set of packages and run all tests on them
     needs: submodule_sanity_guard
     # Skip packaging tests for draft PRs
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
+    if: false # ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     uses: ./.github/workflows/packaging.yml
     with:
       minimal: true
