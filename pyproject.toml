@@ -43,7 +43,7 @@ Changelog = "https://github.com/duckdb/duckdb/releases"
 
 [project.optional-dependencies]
 all = [ # users can install duckdb with 'duckdb[all]', which will install this list
-    "ipython; python_version < '3.14'", # used in duckdb.query_graph
+    "ipython", # used in duckdb.query_graph
     "fsspec",  # used in duckdb.filesystem
     "numpy",   # used in duckdb.experimental.spark and in duckdb.fetchnumpy()
     "pandas; python_version < '3.14'",  # used for pandas dataframes all over the place
@@ -273,7 +273,7 @@ test = [ # dependencies used for running tests
 ]
 scripts = [ # dependencies used for running scripts
     "cxxheaderparser",
-    "ipython; python_version < '3.14'",
+    "ipython",
     "ipywidgets; python_version < '3.14'",
     "numpy",
     "pandas; python_version < '3.14'",

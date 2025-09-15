@@ -38,7 +38,7 @@ jobs:
         platform:
           # - { os: self-hosted,     arch: x86_64,     cibw_system: manylinux }
           - { os: windows-2025,     arch: amd64,      cibw_system: win }
-          - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
+          #- { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
           # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
           # - { os: macos-15,         arch: arm64,      cibw_system: macosx }
           # - { os: macos-15,         arch: universal2, cibw_system: macosx }
@@ -139,7 +139,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON CIBW_CACHE_PATH=D:\cibw-cache 
+          CIBW_ENVIRONMENT_WINDOWS: SKBUILD_BUILD_DIR=build/${{ matrix.python }}-${{ matrix.platform.arch }} CMAKE_VERBOSE_MAKEFILE=ON CIBW_CACHE_PATH=D:\cibw-cache SCCACHE_LOG=debug SCCACHE_NO_DAEMON=1
           CIBW_BUILD_VERBOSITY: 3
           CIBW_CACHE_PATH: D:\cibw-cache
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels (Non-Windows)
