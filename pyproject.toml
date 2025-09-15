@@ -403,3 +403,19 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = [
      "del \"C:\\Strawberry\\c\\bin\\ccache.exe\"",
      "choco install sccache"]
+
+[[tool.scikit-build.overrides]]
+# Windows Free-Threading 
+if.platform-system = "^win32"
+if.abi-flags = "t"
+inherit.cmake.define = "append"
+cmake.define.CMAKE_BUILD_TYPE=""
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.args = [
+   "-G", "Ninja",
+   "--log-level=DEBUG",
+]
+cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
