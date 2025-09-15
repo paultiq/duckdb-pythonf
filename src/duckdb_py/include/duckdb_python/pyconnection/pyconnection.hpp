@@ -337,11 +337,6 @@ public:
 	py::list ListFilesystems();
 	bool FileSystemIsRegistered(const string &name);
 
-	//! Default connection to an in-memory database
-	static DefaultConnectionHolder default_connection;
-	//! Caches and provides an interface to get frequently used modules+subtypes
-	static shared_ptr<PythonImportCache> import_cache;
-
 	static bool IsPandasDataframe(const py::object &object);
 	static PyArrowObjectType GetArrowType(const py::handle &obj);
 	static bool IsAcceptedArrowObject(const py::object &object);
@@ -358,9 +353,6 @@ private:
 	void RegisterArrowObject(const py::object &arrow_object, const string &name);
 	vector<unique_ptr<SQLStatement>> GetStatements(const py::object &query);
 
-	static PythonEnvironmentType environment;
-	static std::string formatted_python_version;
-	static void DetectEnvironment();
 };
 
 template <typename T>
