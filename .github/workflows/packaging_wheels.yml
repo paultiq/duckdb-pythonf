@@ -93,7 +93,10 @@ jobs:
             "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath > vs_path.txt &&
             set /p VS_PATH=<vs_path.txt &&
             call "%VS_PATH%\VC\Auxiliary\Build\vcvars64.bat" &&
-            where cl.exe &&
+            for /f "tokens=*" %i in ('where cl.exe') do set CMAKE_C_COMPILER=%i &&
+            for /f "tokens=*" %i in ('where cl.exe') do set CMAKE_CXX_COMPILER=%i &&
+            echo CMAKE_C_COMPILER=%CMAKE_C_COMPILER% &&
+            echo CMAKE_CXX_COMPILER=%CMAKE_CXX_COMPILER% &&
             if exist D:\ set CIBW_CACHE_PATH=D:\cibw-cache
       - name: Upload wheel
         uses: actions/upload-artifact@v4
