@@ -382,10 +382,16 @@ manylinux-pypy_aarch64-image = "manylinux_2_28"
 enable = ["cpython-freethreading", "cpython-prerelease"]
 
 [tool.cibuildwheel.linux]
-before-build = ["yum install -y ccache"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+before-build = ["yum install -y sccache", "sccache --show-stats"]
+before-test = ["sccache --show-stats"]
 
 [tool.cibuildwheel.macos]
-before-build = ["brew install ccache"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+before-build = ["brew install sccache"]
 
 [tool.cibuildwheel.windows]
-before-build = ["choco install ccache"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+before-build = [
+     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\"",
+     "choco install sccache"]
