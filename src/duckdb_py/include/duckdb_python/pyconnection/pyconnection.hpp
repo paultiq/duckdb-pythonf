@@ -28,6 +28,7 @@
 
 namespace duckdb {
 struct BoundParameterData;
+struct DuckDBPyModuleState;
 
 enum class PythonEnvironmentType { NORMAL, INTERACTIVE, JUPYTER };
 
@@ -171,8 +172,12 @@ public:
 	case_insensitive_map_t<unique_ptr<ExternalDependency>> registered_functions;
 	case_insensitive_set_t registered_objects;
 
+private:
+	DuckDBPyModuleState& module_state;
+
 public:
-	explicit DuckDBPyConnection() {
+	DuckDBPyConnection();
+	DuckDBPyConnection(DuckDBPyModuleState& state) : module_state(state) {
 	}
 	~DuckDBPyConnection();
 
