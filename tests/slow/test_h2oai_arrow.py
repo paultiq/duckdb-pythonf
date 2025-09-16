@@ -194,7 +194,7 @@ class TestH2OAIArrow(object):
 
 
 @fixture(scope="module")
-def arrow_dataset_register():
+def arrow_dataset_register(tmp_path):
     """Single fixture to download files and register them on the given connection"""
     session = requests.Session()
     retries = urllib3_util.Retry(
@@ -212,19 +212,15 @@ def arrow_dataset_register():
         respect_retry_after_header=True,  # respect Retry-After headers
     )
     session.mount('https://', requests_adapters.HTTPAdapter(max_retries=retries))
-    saved_filenames = set()
 
     def _register(url, filename, con, tablename):
+        file_path = tmp_path / filename
         r = session.get(url)
-        with open(filename, 'wb') as f:
-            f.write(r.content)
-        con.register(tablename, read_csv(filename))
-        saved_filenames.add(filename)
+        file_path.write_bytes(r.content)
+        con.register(tablename, read_csv(str(file_path)))
 
     yield _register
 
-    for filename in saved_filenames:
-        os.remove(filename)
     session.close()
 
 
