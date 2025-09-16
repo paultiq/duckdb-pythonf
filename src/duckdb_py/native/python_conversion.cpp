@@ -961,6 +961,9 @@ void TransformPythonObjectInternal(py::handle ele, A &result, const B &param, bo
 					break;
 				}
 				if (conversion_target.id() == LogicalTypeId::UBIGINT) {
+					if (PyErr_Occurred()) {
+						PyErr_Clear();
+					}
 					throw InvalidInputException("Python Conversion Failure: Value out of range for type %s",
 					                            conversion_target);
 				}
