@@ -11,6 +11,11 @@
 
 namespace duckdb {
 
+// TODO: Make non-static. 
+// Left static because of scope required to efficiently pass import_cache
+// without expensive lookups
+static DuckDBPyModuleState* g_module_state;
+
 // Module state constructor
 DuckDBPyModuleState::DuckDBPyModuleState() {
 	// Create caches
@@ -44,19 +49,41 @@ DuckDBPyModuleState::DuckDBPyModuleState() {
 			}
 		}
 	}
+
 }
 
 DuckDBPyModuleState &GetModuleState() {
-	// Acquire GIL for free-threading safety
-	py::gil_scoped_acquire gil;
-
-	auto duckdb_module = py::module_::import("_duckdb");
-	try {
-		auto capsule = duckdb_module.attr("__duckdb_state").cast<py::capsule>();
-		return *static_cast<DuckDBPyModuleState *>(capsule.get_pointer());
-	} catch (const py::attribute_error &) {
-		throw InternalException("Module state not initialized - __duckdb_state attribute missing");
+	// TODO: Externalize this static cache when adding multi-interpreter support
+	// For now, single interpreter assumption allows simple static caching
+	if (!g_module_state) {
+		throw InternalException("Module state not initialized - call SetModuleState() during module init");
 	}
+	return *g_module_state;
+}
+
+void SetModuleState(DuckDBPyModuleState *state) {
+	printf("DEBUG: SetModuleState() called - initializing static cache\n");
+	g_module_state = state;
+}
+
+shared_ptr<DuckDBPyConnection> DuckDBPyModuleState::GetDefaultConnection() {
+	return default_connection.Get();
+}
+
+void DuckDBPyModuleState::SetDefaultConnection(shared_ptr<DuckDBPyConnection> connection) {
+	default_connection.Set(std::move(connection));
+}
+
+void DuckDBPyModuleState::ClearDefaultConnection() {
+	default_connection.Set(nullptr);
+}
+
+PythonImportCache* DuckDBPyModuleState::GetImportCache() {
+	return import_cache.get();
+}
+
+void DuckDBPyModuleState::ResetImportCache() {
+	import_cache.reset();
 }
 
 } // namespace duckdb

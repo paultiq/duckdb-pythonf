@@ -67,7 +67,7 @@
 
 namespace duckdb {
 
-DuckDBPyConnection::DuckDBPyConnection() : module_state(GetModuleState()) {
+DuckDBPyConnection::DuckDBPyConnection() {
 }
 
 DuckDBPyConnection::~DuckDBPyConnection() {
@@ -1906,7 +1906,7 @@ void DuckDBPyConnection::Cursors::ClearCursors() {
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyConnection::Cursor() {
-	auto res = make_shared_ptr<DuckDBPyConnection>(module_state);
+	auto res = make_shared_ptr<DuckDBPyConnection>();
 	res->con.SetDatabase(con);
 	res->con.SetConnection(make_uniq<Connection>(res->con.GetDatabase()));
 	cursors.AddCursor(res);
@@ -2068,15 +2068,14 @@ void InstantiateNewInstance(DuckDB &db) {
 }
 
 static shared_ptr<DuckDBPyConnection> FetchOrCreateInstance(const string &database_path, DBConfig &config) {
-	auto& state = GetModuleState();
-	auto res = make_shared_ptr<DuckDBPyConnection>(state);
+	auto res = make_shared_ptr<DuckDBPyConnection>();
 	bool cache_instance = database_path != ":memory:" && !database_path.empty();
 	config.replacement_scans.emplace_back(PythonReplacementScan::Replace);
 	{
 		D_ASSERT(py::gil_check());
 		py::gil_scoped_release release;
 		unique_lock<mutex> lock(res->py_connection_lock);
-		auto database = state.instance_cache->GetOrCreateInstance(database_path, config, cache_instance,
+		auto database = GetModuleState().instance_cache->GetOrCreateInstance(database_path, config, cache_instance,
 		                                                          InstantiateNewInstance);
 		res->con.SetDatabase(std::move(database));
 		res->con.SetConnection(make_uniq<Connection>(res->con.GetDatabase()));
@@ -2125,6 +2124,7 @@ shared_ptr<DuckDBPyConnection> DuckDBPyConnection::Connect(const py::object &dat
 	    "python_scan_all_frames",
 	    "If set, restores the old behavior of scanning all preceding frames to locate the referenced variable.",
 	    LogicalType::BOOLEAN, Value::BOOLEAN(false));
+	// Use static methods here since we don't have connection instance yet
 	if (!DuckDBPyConnection::IsJupyter()) {
 		config_dict["duckdb_api"] = Value("python/" + DuckDBPyConnection::FormattedPythonVersion());
 	} else {
@@ -2160,21 +2160,37 @@ case_insensitive_map_t<BoundParameterData> DuckDBPyConnection::TransformPythonPa
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyConnection::DefaultConnection() {
-	return GetModuleState().default_connection.Get();
+	return GetModuleState().GetDefaultConnection();
 }
 
 void DuckDBPyConnection::SetDefaultConnection(shared_ptr<DuckDBPyConnection> connection) {
-	GetModuleState().default_connection.Set(std::move(connection));
+	GetModuleState().SetDefaultConnection(std::move(connection));
 }
 
 PythonImportCache *DuckDBPyConnection::ImportCache() {
-	return GetModuleState().import_cache.get();
+	return GetModuleState().GetImportCache();
+}
+
+PythonImportCache *DuckDBPyConnection::GetImportCache() {
+	return GetModuleState().GetImportCache();
+}
+
+bool DuckDBPyConnection::IsJupyterInstance() const {
+	return GetModuleState().environment == PythonEnvironmentType::JUPYTER;
+}
+
+bool DuckDBPyConnection::IsInteractiveInstance() const {
+	return GetModuleState().environment != PythonEnvironmentType::NORMAL;
+}
+
+std::string DuckDBPyConnection::FormattedPythonVersionInstance() const {
+	return GetModuleState().formatted_python_version;
 }
 
 ModifiedMemoryFileSystem &DuckDBPyConnection::GetObjectFileSystem() {
 	if (!internal_object_filesystem) {
 		D_ASSERT(!FileSystemIsRegistered("DUCKDB_INTERNAL_OBJECTSTORE"));
-		auto &import_cache_py = *ImportCache();
+		auto &import_cache_py = *GetImportCache();
 		auto modified_memory_fs = import_cache_py.duckdb.filesystem.ModifiedMemoryFileSystem();
 		if (modified_memory_fs.ptr() == nullptr) {
 			throw InvalidInputException(
@@ -2207,8 +2223,8 @@ void DuckDBPyConnection::Exit(DuckDBPyConnection &self, const py::object &exc_ty
 
 void DuckDBPyConnection::Cleanup() {
 	try {
-		GetModuleState().default_connection.Set(nullptr);
-		GetModuleState().import_cache.reset();
+		GetModuleState().ClearDefaultConnection();
+		GetModuleState().ResetImportCache();
 	} catch (const pybind11::error_already_set &) {
 		// Python is shutting down, ignore cleanup failures
 	}

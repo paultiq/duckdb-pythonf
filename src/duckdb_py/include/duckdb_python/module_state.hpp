@@ -29,6 +29,15 @@ struct DuckDBPyModuleState {
 
 	DuckDBPyModuleState();
 
+	// Encapsulated default connection operations for future free threading control
+	shared_ptr<DuckDBPyConnection> GetDefaultConnection();
+	void SetDefaultConnection(shared_ptr<DuckDBPyConnection> connection);
+	void ClearDefaultConnection();
+
+	// Encapsulated import cache operations for future free threading control
+	PythonImportCache* GetImportCache();
+	void ResetImportCache();
+
 private:
 	// Non-copyable
 	DuckDBPyModuleState(const DuckDBPyModuleState &) = delete;
@@ -36,5 +45,6 @@ private:
 };
 
 DuckDBPyModuleState &GetModuleState();
+void SetModuleState(DuckDBPyModuleState *state);
 
 } // namespace duckdb

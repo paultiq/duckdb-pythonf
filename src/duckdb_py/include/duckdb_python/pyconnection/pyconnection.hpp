@@ -172,13 +172,8 @@ public:
 	case_insensitive_map_t<unique_ptr<ExternalDependency>> registered_functions;
 	case_insensitive_set_t registered_objects;
 
-private:
-	DuckDBPyModuleState& module_state;
-
 public:
 	DuckDBPyConnection();
-	DuckDBPyConnection(DuckDBPyModuleState& state) : module_state(state) {
-	}
 	~DuckDBPyConnection();
 
 public:
@@ -196,7 +191,14 @@ public:
 	static shared_ptr<DuckDBPyConnection> DefaultConnection();
 	static void SetDefaultConnection(shared_ptr<DuckDBPyConnection> conn);
 	static PythonImportCache *ImportCache();
+	// Instance method for fast import cache access using cached module state
+	PythonImportCache *GetImportCache();
 	static bool IsInteractive();
+
+	// Instance methods for optimized module state access
+	bool IsJupyterInstance() const;
+	bool IsInteractiveInstance() const;
+	std::string FormattedPythonVersionInstance() const;
 
 	unique_ptr<DuckDBPyRelation> ReadCSV(const py::object &name, py::kwargs &kwargs);
 
