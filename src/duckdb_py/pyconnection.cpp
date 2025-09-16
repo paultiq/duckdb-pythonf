@@ -67,6 +67,9 @@
 
 namespace duckdb {
 
+DuckDBPyConnection::DuckDBPyConnection() : module_state(GetModuleState()) {
+}
+
 DuckDBPyConnection::~DuckDBPyConnection() {
 	try {
 		py::gil_scoped_release gil;
@@ -1900,7 +1903,7 @@ void DuckDBPyConnection::Cursors::ClearCursors() {
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyConnection::Cursor() {
-	auto res = make_shared_ptr<DuckDBPyConnection>();
+	auto res = make_shared_ptr<DuckDBPyConnection>(module_state);
 	res->con.SetDatabase(con);
 	res->con.SetConnection(make_uniq<Connection>(res->con.GetDatabase()));
 	cursors.AddCursor(res);
@@ -2062,15 +2065,16 @@ void InstantiateNewInstance(DuckDB &db) {
 }
 
 static shared_ptr<DuckDBPyConnection> FetchOrCreateInstance(const string &database_path, DBConfig &config) {
-	auto res = make_shared_ptr<DuckDBPyConnection>();
+	auto& state = GetModuleState();
+	auto res = make_shared_ptr<DuckDBPyConnection>(state);
 	bool cache_instance = database_path != ":memory:" && !database_path.empty();
 	config.replacement_scans.emplace_back(PythonReplacementScan::Replace);
 	{
 		D_ASSERT(py::gil_check());
 		py::gil_scoped_release release;
 		unique_lock<mutex> lock(res->py_connection_lock);
-		auto database = GetModuleState().instance_cache->GetOrCreateInstance(database_path, config, cache_instance,
-		                                                                     InstantiateNewInstance);
+		auto database = state.instance_cache->GetOrCreateInstance(database_path, config, cache_instance,
+		                                                          InstantiateNewInstance);
 		res->con.SetDatabase(std::move(database));
 		res->con.SetConnection(make_uniq<Connection>(res->con.GetDatabase()));
 	}
