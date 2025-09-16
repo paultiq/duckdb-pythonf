@@ -228,7 +228,7 @@ test = [ # dependencies used for running tests
     "pytest-reraise",
     "pytest-timeout",
     "pytest-xdist",         # Parallel (multi-process)
-    "pytest-randomly",      # Randomizes order of tests 
+    # "pytest-randomly",      # Randomizes order of tests 
     "pytest-timestamper",   # Adds timestamps to test output
     "pytest-run-parallel",  # For free-threading testing
     "mypy",
