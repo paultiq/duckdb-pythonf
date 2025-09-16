@@ -194,8 +194,10 @@ class TestH2OAIArrow(object):
 
 
 @fixture(scope="module")
-def arrow_dataset_register(tmp_path):
+def arrow_dataset_register(tmp_path_factory):
     """Single fixture to download files and register them on the given connection"""
+    temp_dir = tmp_path_factory.mktemp("h2oai_data")
+
     session = requests.Session()
     retries = urllib3_util.Retry(
         allowed_methods={'GET'},  # only retry on GETs (all we do)
@@ -214,7 +216,7 @@ def arrow_dataset_register(tmp_path):
     session.mount('https://', requests_adapters.HTTPAdapter(max_retries=retries))
 
     def _register(url, filename, con, tablename):
-        file_path = tmp_path / filename
+        file_path = temp_dir / filename
         r = session.get(url)
         file_path.write_bytes(r.content)
         con.register(tablename, read_csv(str(file_path)))
