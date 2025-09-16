@@ -71,7 +71,7 @@ jobs:
           submodules: true
       - name: Checkout DuckDB
         shell: bash
-        continue-on-error: true
+        continue-on-error: true  # needed when we're merging into a branch
         if: ${{ inputs.duckdb-sha }}
         run: |
           cd external/duckdb
