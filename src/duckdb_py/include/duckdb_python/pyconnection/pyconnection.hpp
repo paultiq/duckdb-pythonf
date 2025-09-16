@@ -193,6 +193,11 @@ public:
 	static PythonImportCache *ImportCache();
 	static bool IsInteractive();
 
+	static shared_ptr<DuckDBPyConnection> GetDefaultConnection();
+	static void ClearDefaultConnection();
+	static PythonImportCache *GetImportCache();
+	static void ClearImportCache();
+
 	unique_ptr<DuckDBPyRelation> ReadCSV(const py::object &name, py::kwargs &kwargs);
 
 	py::list ExtractStatements(const string &query);
@@ -352,7 +357,6 @@ private:
 	                               bool side_effects);
 	void RegisterArrowObject(const py::object &arrow_object, const string &name);
 	vector<unique_ptr<SQLStatement>> GetStatements(const py::object &query);
-
 };
 
 template <typename T>

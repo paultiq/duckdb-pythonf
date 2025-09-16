@@ -46,8 +46,10 @@ DuckDBPyModuleState::DuckDBPyModuleState() {
 	}
 }
 
+void DuckDBPyModuleState::CloseConnection() {
+}
+
 DuckDBPyModuleState &GetModuleState() {
-	// Acquire GIL for free-threading safety
 	py::gil_scoped_acquire gil;
 
 	auto duckdb_module = py::module_::import("_duckdb");

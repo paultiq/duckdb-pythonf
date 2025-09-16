@@ -32,6 +32,10 @@ namespace py = pybind11;
 
 namespace duckdb {
 
+// Global lock object for critical sections
+// TODO: Consider more narrowly scoped locks
+py::object g_global_lock_object;
+
 enum PySQLTokenType : uint8_t {
 	PY_SQL_TOKEN_IDENTIFIER = 0,
 	PY_SQL_TOKEN_NUMERIC_CONSTANT,
@@ -1008,8 +1012,19 @@ static void RegisterExpectedResultType(py::handle &m) {
 	expected_return_type.export_values();
 }
 
+// Only mark mod_gil_not_used for 3.14t or later
+// This is to not add support for 3.13t
+// Py_GIL_DISABLED check is not strictly necessary
+#if defined(Py_GIL_DISABLED) && PY_VERSION_HEX >= 0x030e0000
 PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m, py::mod_gil_not_used(),
                 py::multiple_interpreters::not_supported()) { // NOLINT
+#else
+PYBIND11_MODULE(DUCKDB_PYTHON_LIB_NAME, m,
+                py::multiple_interpreters::not_supported()) { // NOLINT
+#endif
+
+	g_global_lock_object = py::none();
+
 	// Initialize module state completely during initialization
 	auto state = make_uniq<DuckDBPyModuleState>();
 
