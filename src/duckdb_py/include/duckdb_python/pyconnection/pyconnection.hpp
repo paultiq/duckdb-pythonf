@@ -190,9 +190,10 @@ public:
 	static std::string FormattedPythonVersion();
 	static shared_ptr<DuckDBPyConnection> DefaultConnection();
 	static void SetDefaultConnection(shared_ptr<DuckDBPyConnection> conn);
+	static shared_ptr<DuckDBPyConnection> GetDefaultConnection();
+	static void ClearDefaultConnection();
+	static void ClearImportCache();
 	static PythonImportCache *ImportCache();
-	// Instance method for fast import cache access using cached module state
-	PythonImportCache *GetImportCache();
 	static bool IsInteractive();
 
 	// Instance methods for optimized module state access

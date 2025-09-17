@@ -2174,9 +2174,6 @@ PythonImportCache *DuckDBPyConnection::ImportCache() {
 	return GetModuleState().GetImportCache();
 }
 
-PythonImportCache *DuckDBPyConnection::GetImportCache() {
-	return GetModuleState().GetImportCache();
-}
 
 bool DuckDBPyConnection::IsJupyterInstance() const {
 	return GetModuleState().environment == PythonEnvironmentType::JUPYTER;
@@ -2193,7 +2190,7 @@ std::string DuckDBPyConnection::FormattedPythonVersionInstance() const {
 ModifiedMemoryFileSystem &DuckDBPyConnection::GetObjectFileSystem() {
 	if (!internal_object_filesystem) {
 		D_ASSERT(!FileSystemIsRegistered("DUCKDB_INTERNAL_OBJECTSTORE"));
-		auto &import_cache_py = *GetImportCache();
+		auto &import_cache_py = *ImportCache();
 		auto modified_memory_fs = import_cache_py.duckdb.filesystem.ModifiedMemoryFileSystem();
 		if (modified_memory_fs.ptr() == nullptr) {
 			throw InvalidInputException(
@@ -2225,12 +2222,11 @@ void DuckDBPyConnection::Exit(DuckDBPyConnection &self, const py::object &exc_ty
 }
 
 void DuckDBPyConnection::Cleanup() {
-	try {
-		GetModuleState().ClearDefaultConnection();
-		GetModuleState().ResetImportCache();
-	} catch (const pybind11::error_already_set &) {
-		// Python is shutting down, ignore cleanup failures
+	if (Py_IsFinalizing()) {
+		return; // Skip cleanup during Python shutdown
 	}
+	GetModuleState().ClearDefaultConnection();
+	GetModuleState().ClearImportCache();
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyConnection::GetDefaultConnection() {
@@ -2242,7 +2238,7 @@ void DuckDBPyConnection::ClearDefaultConnection() {
 }
 
 void DuckDBPyConnection::ClearImportCache() {
-	GetModuleState().ResetImportCache();
+	GetModuleState().ClearImportCache();
 }
 
 bool DuckDBPyConnection::IsPandasDataframe(const py::object &object) {

@@ -35,9 +35,12 @@ struct DuckDBPyModuleState {
 	void ClearDefaultConnection();
 
 	PythonImportCache* GetImportCache();
-	void ResetImportCache();
+	void ClearImportCache();
 
 	DBInstanceCache* GetInstanceCache();
+
+	static DuckDBPyModuleState& GetGlobalModuleState();
+	static void SetGlobalModuleState(DuckDBPyModuleState* state);
 
 private:
 	shared_ptr<PythonImportCache> import_cache;

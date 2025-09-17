@@ -56,18 +56,26 @@ DuckDBPyModuleState::DuckDBPyModuleState() {
 }
 
 
-DuckDBPyModuleState &GetModuleState() {
+DuckDBPyModuleState& DuckDBPyModuleState::GetGlobalModuleState() {
 	// TODO: Externalize this static cache when adding multi-interpreter support
 	// For now, single interpreter assumption allows simple static caching
-	if (!DuckDBPyModuleState::g_module_state) {
-		throw InternalException("Module state not initialized - call SetModuleState() during module init");
+	if (!g_module_state) {
+		throw InternalException("Module state not initialized - call SetGlobalModuleState() during module init");
 	}
-	return *DuckDBPyModuleState::g_module_state;
+	return *g_module_state;
+}
+
+void DuckDBPyModuleState::SetGlobalModuleState(DuckDBPyModuleState *state) {
+	printf("DEBUG: SetGlobalModuleState() called - initializing static cache\n");
+	g_module_state = state;
+}
+
+DuckDBPyModuleState &GetModuleState() {
+	return DuckDBPyModuleState::GetGlobalModuleState();
 }
 
 void SetModuleState(DuckDBPyModuleState *state) {
-	printf("DEBUG: SetModuleState() called - initializing static cache\n");
-	DuckDBPyModuleState::g_module_state = state;
+	DuckDBPyModuleState::SetGlobalModuleState(state);
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyModuleState::GetDefaultConnection() {
@@ -86,7 +94,7 @@ PythonImportCache* DuckDBPyModuleState::GetImportCache() {
 	return import_cache.get();
 }
 
-void DuckDBPyModuleState::ResetImportCache() {
+void DuckDBPyModuleState::ClearImportCache() {
 	import_cache.reset();
 }
 
