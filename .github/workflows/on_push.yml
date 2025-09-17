@@ -1,6 +1,6 @@
 name: Tests and coverage on push
 on:
-  push:
+  workflow-dispatch:
     branches-ignore:
       - main
       - v*.*-*
