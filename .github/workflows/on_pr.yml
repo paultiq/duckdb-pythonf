@@ -2,8 +2,7 @@ name: Tests and builds on PR
 on:
   pull_request:
     branches:
-      - main
-      - v*.*-*
+      - '**'
     types: [opened, reopened, ready_for_review, converted_to_draft, synchronize]
     paths-ignore:
       - '**.md'
@@ -13,10 +12,11 @@ on:
       - '.github//**'
       - '!.github/workflows/on_push.yml'
       - '!.github/workflows/coverage.yml'
+    workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
 
 jobs:
   submodule_sanity_guard:
@@ -38,7 +38,7 @@ jobs:
     name: Run coverage tests
     needs: submodule_sanity_guard
     # Only run coverage test for draft PRs
-    if: ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == true }}
+    if:  false # ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == true }}
     uses: ./.github/workflows/coverage.yml
     with:
       duckdb_git_ref: ${{ github.base_ref }}

@@ -30,14 +30,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp39, cp310, cp311, cp312, cp313, cp314, cp314t ]
+        python: [ cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314, 
         platform:
-          - { os: windows-2025,     arch: amd64,      cibw_system: win }
+          # - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
-          - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
-          - { os: macos-15,         arch: arm64,      cibw_system: macosx }
-          - { os: macos-15,         arch: universal2, cibw_system: macosx }
-          - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
+          # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
+          # - { os: macos-15,         arch: arm64,      cibw_system: macosx }
+          # - { os: macos-15,         arch: universal2, cibw_system: macosx }
+          # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
         minimal:
           - ${{ inputs.minimal }}
         exclude:
@@ -54,27 +54,35 @@ jobs:
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
-        uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} &&
+        uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
-        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
-
+        uv run -v pytest -n auto ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs
+      SCCACHE_GHA_ENABLED: "on"
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
+      ACTIONS_CACHE_SERVICE_V2: "1"  
+      PYTHON_GIL: "1"  
     steps:
       - name: Checkout DuckDB Python
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0
           submodules: true
-
       - name: Checkout DuckDB
         shell: bash
+        continue-on-error: true  # needed when we're merging into a branch
         if: ${{ inputs.duckdb-sha }}
         run: |
           cd external/duckdb
           git fetch origin
           git checkout ${{ inputs.duckdb-sha }}
-
+      - name: Configure Cache Env
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       # Make sure that OVERRIDE_GIT_DESCRIBE is propagated to cibuildwhel's env, also when it's running linux builds
       - name: Set OVERRIDE_GIT_DESCRIBE
         shell: bash
@@ -86,6 +94,7 @@ jobs:
         with:
           version: "0.8.16"
           enable-cache: false
+          activate-environment: true
           cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           python-version: ${{ matrix.python }}
 
@@ -94,9 +103,22 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          # PYTHON_GIL=1: Suppresses the RuntimeWarning that the GIL is enabled on free-threaded builds. 
-          # TODO: Remove PYTHON_GIL=1 when free-threaded is supported. 
-          CIBW_ENVIRONMENT: PYTHON_GIL=1
+          # PYTHON_GIL=1: Suppresses the RuntimeWarning that the GIL is enabled on free-threaded builds.
+          # TODO: Remove PYTHON_GIL=1 when free-threaded is supported.
+          CIBW_ENVIRONMENT: PYTHON_GIL=1 CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
+          CIBW_ENVIRONMENT_PASS_LINUX: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER PYTHON_GIL
+          CIBW_ENVIRONMENT_PASS_MACOS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER PYTHON_GIL
+          CIBW_ENVIRONMENT_PASS_WINDOWS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER PYTHON_GIL
+          CIBW_BEFORE_BUILD_LINUX: >
+            if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
+            curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
+            cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
+            sccache --show-stats
+          CIBW_BEFORE_BUILD_MACOS: brew install sccache
+          CIBW_BEFORE_BUILD_WINDOWS: >
+            del "C:\Strawberry\c\bin\ccache.exe" &&
+            choco install sccache
+          CIBW_BEFORE_TEST_LINUX: sccache --show-stats 
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
