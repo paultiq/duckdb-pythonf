@@ -24,19 +24,21 @@ def tmp_database(tmp_path_factory):
 # wrapped by the 'duckdb' module, to execute with the 'default_connection'
 class TestDuckDBConnection(object):
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_append(self, pandas):
-        duckdb.execute("Create table integers (i integer)")
+    def test_append(self, pandas, duckdb_cursor):
+        duckdb_cursor.execute("Create table integers (i integer)")
         df_in = pandas.DataFrame(
             {
                 'numbers': [1, 2, 3, 4, 5],
             }
         )
-        duckdb.append('integers', df_in)
-        assert duckdb.execute('select count(*) from integers').fetchone()[0] == 5
+        duckdb_cursor.append('integers', df_in)
+        assert duckdb_cursor.execute('select count(*) from integers').fetchone()[0] == 5
         # cleanup
-        duckdb.execute("drop table integers")
+        duckdb_cursor.execute("drop table integers")
 
-    def test_default_connection_from_connect(self):
+    # Not thread safe because it creates a table in the default connection
+    @pytest.mark.thread_unsafe
+    def test_default_connection_from_connect(self, duckdb_cursor):
         duckdb.sql('create or replace table connect_default_connect (i integer)')
         con = duckdb.connect(':default:')
         con.sql('select i from connect_default_connect')
@@ -55,21 +57,24 @@ class TestDuckDBConnection(object):
         duckdb.execute("select [1,2,3]")
         result = duckdb.fetch_arrow_table()
 
-    def test_begin_commit(self):
-        duckdb.begin()
-        duckdb.execute("create table tbl as select 1")
-        duckdb.commit()
-        res = duckdb.table("tbl")
-        duckdb.execute("drop table tbl")
+    def test_begin_commit(self, duckdb_cursor):
+        duckdb_cursor.begin()
+        duckdb_cursor.execute("create table tbl as select 1")
+        duckdb_cursor.commit()
+        res = duckdb_cursor.table("tbl")
+        duckdb_cursor.execute("drop table tbl")
 
-    def test_begin_rollback(self):
-        duckdb.begin()
-        duckdb.execute("create table tbl as select 1")
-        duckdb.rollback()
+    def test_begin_rollback(self, duckdb_cursor):
+        duckdb_cursor.begin()
+        duckdb_cursor.execute("create table tbl as select 1")
+        duckdb_cursor.rollback()
         with pytest.raises(duckdb.CatalogException):
             # Table does not exist
-            res = duckdb.table("tbl")
+            res = duckdb_cursor.table("tbl")
 
+
+    # Not thread safe because it creates a table in the default connection
+    @pytest.mark.thread_unsafe
     def test_cursor(self):
         duckdb.execute("create table tbl as select 3")
         duckdb_cursor = duckdb.cursor()
@@ -95,6 +100,7 @@ class TestDuckDBConnection(object):
         use_cursors()
         con.close()
 
+    @pytest.mark.thread_unsafe
     def test_df(self):
         ref = [([1, 2, 3],)]
         duckdb.execute("select [1,2,3]")
@@ -102,11 +108,11 @@ class TestDuckDBConnection(object):
         res = duckdb.query("select * from res_df").fetchall()
         assert res == ref
 
-    def test_duplicate(self):
-        duckdb.execute("create table tbl as select 5")
-        dup_conn = duckdb.duplicate()
+    def test_duplicate(self, duckdb_cursor):
+        duckdb_cursor.execute("create table tbl as select 5")
+        dup_conn = duckdb_cursor.duplicate()
         dup_conn.table("tbl").fetchall()
-        duckdb.execute("drop table tbl")
+        duckdb_cursor.execute("drop table tbl")
         with pytest.raises(duckdb.CatalogException):
             dup_conn.table("tbl").fetchall()
 
@@ -120,20 +126,20 @@ class TestDuckDBConnection(object):
     def test_execute(self):
         assert [([4, 2],)] == duckdb.execute("select [4,2]").fetchall()
 
-    def test_executemany(self):
+    def test_executemany(self, duckdb_cursor):
         # executemany does not keep an open result set
         # TODO: shouldn't we also have a version that executes a query multiple times with different parameters, returning all of the results?
-        duckdb.execute("create table tbl (i integer, j varchar)")
-        duckdb.executemany("insert into tbl VALUES (?, ?)", [(5, 'test'), (2, 'duck'), (42, 'quack')])
-        res = duckdb.table("tbl").fetchall()
+        duckdb_cursor.execute("create table tbl (i integer, j varchar)")
+        duckdb_cursor.executemany("insert into tbl VALUES (?, ?)", [(5, 'test'), (2, 'duck'), (42, 'quack')])
+        res = duckdb_cursor.table("tbl").fetchall()
         assert res == [(5, 'test'), (2, 'duck'), (42, 'quack')]
-        duckdb.execute("drop table tbl")
+        duckdb_cursor.execute("drop table tbl")
 
-    def test_pystatement(self):
+    def test_pystatement(self, duckdb_cursor):
         with pytest.raises(duckdb.ParserException, match='seledct'):
-            statements = duckdb.extract_statements('seledct 42; select 21')
+            statements = duckdb_cursor.extract_statements('seledct 42; select 21')
 
-        statements = duckdb.extract_statements('select $1; select 21')
+        statements = duckdb_cursor.extract_statements('select $1; select 21')
         assert len(statements) == 2
         assert statements[0].query == 'select $1'
         assert statements[0].type == duckdb.StatementType.SELECT
@@ -148,23 +154,23 @@ class TestDuckDBConnection(object):
             duckdb.InvalidInputException,
             match='Please provide either a DuckDBPyStatement or a string representing the query',
         ):
-            rel = duckdb.query(statements)
+            rel = duckdb_cursor.query(statements)
 
         with pytest.raises(duckdb.BinderException, match="This type of statement can't be prepared!"):
-            rel = duckdb.query(statements[0])
+            rel = duckdb_cursor.query(statements[0])
 
-        assert duckdb.query(statements[1]).fetchall() == [(21,)]
-        assert duckdb.execute(statements[1]).fetchall() == [(21,)]
+        assert duckdb_cursor.query(statements[1]).fetchall() == [(21,)]
+        assert duckdb_cursor.execute(statements[1]).fetchall() == [(21,)]
 
         with pytest.raises(
             duckdb.InvalidInputException,
             match='Values were not provided for the following prepared statement parameters: 1',
         ):
-            duckdb.execute(statements[0])
-        assert duckdb.execute(statements[0], {'1': 42}).fetchall() == [(42,)]
+            duckdb_cursor.execute(statements[0])
+        assert duckdb_cursor.execute(statements[0], {'1': 42}).fetchall() == [(42,)]
 
-        duckdb.execute("create table tbl(a integer)")
-        statements = duckdb.extract_statements('insert into tbl select $1')
+        duckdb_cursor.execute("create table tbl(a integer)")
+        statements = duckdb_cursor.extract_statements('insert into tbl select $1')
         assert statements[0].expected_result_type == [
             duckdb.ExpectedResultType.CHANGED_ROWS,
             duckdb.ExpectedResultType.QUERY_RESULT,
@@ -172,36 +178,37 @@ class TestDuckDBConnection(object):
         with pytest.raises(
             duckdb.InvalidInputException, match='executemany requires a non-empty list of parameter sets to be provided'
         ):
-            duckdb.executemany(statements[0])
-        duckdb.executemany(statements[0], [(21,), (22,), (23,)])
-        assert duckdb.table('tbl').fetchall() == [(21,), (22,), (23,)]
-        duckdb.execute("drop table tbl")
+            duckdb_cursor.executemany(statements[0])
+        duckdb_cursor.executemany(statements[0], [(21,), (22,), (23,)])
+        assert duckdb_cursor.table('tbl').fetchall() == [(21,), (22,), (23,)]
+        duckdb_cursor.execute("drop table tbl")
 
-    def test_fetch_arrow_table(self):
+    def test_fetch_arrow_table(self, duckdb_cursor):
         # Needed for 'fetch_arrow_table'
         pyarrow = pytest.importorskip("pyarrow")
 
-        duckdb.execute("Create Table test (a integer)")
+        duckdb_cursor.execute("Create Table test (a integer)")
 
         for i in range(1024):
             for j in range(2):
-                duckdb.execute("Insert Into test values ('" + str(i) + "')")
-        duckdb.execute("Insert Into test values ('5000')")
-        duckdb.execute("Insert Into test values ('6000')")
+                duckdb_cursor.execute("Insert Into test values ('" + str(i) + "')")
+        duckdb_cursor.execute("Insert Into test values ('5000')")
+        duckdb_cursor.execute("Insert Into test values ('6000')")
         sql = '''
         SELECT  a, COUNT(*) AS repetitions
         FROM    test
         GROUP BY a
         '''
 
-        result_df = duckdb.execute(sql).df()
+        result_df = duckdb_cursor.execute(sql).df()
 
-        arrow_table = duckdb.execute(sql).fetch_arrow_table()
+        arrow_table = duckdb_cursor.execute(sql).fetch_arrow_table()
 
         arrow_df = arrow_table.to_pandas()
         assert result_df['repetitions'].sum() == arrow_df['repetitions'].sum()
-        duckdb.execute("drop table test")
+        duckdb_cursor.execute("drop table test")
 
+    @pytest.mark.thread_unsafe
     def test_fetch_df(self):
         ref = [([1, 2, 3],)]
         duckdb.execute("select [1,2,3]")
@@ -209,30 +216,31 @@ class TestDuckDBConnection(object):
         res = duckdb.query("select * from res_df").fetchall()
         assert res == ref
 
-    def test_fetch_df_chunk(self):
-        duckdb.execute("CREATE table t as select range a from range(3000);")
-        query = duckdb.execute("SELECT a FROM t")
+    def test_fetch_df_chunk(self, duckdb_cursor):
+        duckdb_cursor.execute("CREATE table t as select range a from range(3000);")
+        query = duckdb_cursor.execute("SELECT a FROM t")
         cur_chunk = query.fetch_df_chunk()
         assert cur_chunk['a'][0] == 0
         assert len(cur_chunk) == 2048
         cur_chunk = query.fetch_df_chunk()
         assert cur_chunk['a'][0] == 2048
         assert len(cur_chunk) == 952
-        duckdb.execute("DROP TABLE t")
+        duckdb_cursor.execute("DROP TABLE t")
 
-    def test_fetch_record_batch(self):
+    def test_fetch_record_batch(self, duckdb_cursor):
         # Needed for 'fetch_arrow_table'
         pyarrow = pytest.importorskip("pyarrow")
 
-        duckdb.execute("CREATE table t as select range a from range(3000);")
-        duckdb.execute("SELECT a FROM t")
-        record_batch_reader = duckdb.fetch_record_batch(1024)
+        duckdb_cursor.execute("CREATE table t as select range a from range(3000);")
+        duckdb_cursor.execute("SELECT a FROM t")
+        record_batch_reader = duckdb_cursor.fetch_record_batch(1024)
         chunk = record_batch_reader.read_all()
         assert len(chunk) == 3000
 
     def test_fetchall(self):
         assert [([1, 2, 3],)] == duckdb.execute("select [1,2,3]").fetchall()
 
+    @pytest.mark.thread_unsafe
     def test_fetchdf(self):
         ref = [([1, 2, 3],)]
         duckdb.execute("select [1,2,3]")
@@ -286,13 +294,12 @@ class TestDuckDBConnection(object):
     def test_register(self):
         assert None != duckdb.register
 
-    def test_register_relation(self):
-        con = duckdb.connect()
-        rel = con.sql('select [5,4,3]')
-        con.register("relation", rel)
+    def test_register_relation(self, duckdb_cursor):
+        rel = duckdb_cursor.sql('select [5,4,3]')
+        duckdb_cursor.register("relation", rel)
 
-        con.sql("create table tbl as select * from relation")
-        assert con.table('tbl').fetchall() == [([5, 4, 3],)]
+        duckdb_cursor.sql("create table tbl as select * from relation")
+        assert duckdb_cursor.table('tbl').fetchall() == [([5, 4, 3],)]
 
     def test_unregister_problematic_behavior(self, duckdb_cursor):
         # We have a VIEW called 'vw' in the Catalog
@@ -314,27 +321,25 @@ class TestDuckDBConnection(object):
         assert duckdb_cursor.execute("select * from vw").fetchone() == (0,)
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_relation_out_of_scope(self, pandas):
+    def test_relation_out_of_scope(self, pandas, duckdb_cursor):
         def temporary_scope():
             # Create a connection, we will return this
-            con = duckdb.connect()
             # Create a dataframe
             df = pandas.DataFrame({'a': [1, 2, 3]})
             # The dataframe has to be registered as well
             # making sure it does not go out of scope
-            con.register("df", df)
-            rel = con.sql('select * from df')
-            con.register("relation", rel)
-            return con
+            duckdb_cursor.register("df", df)
+            rel = duckdb_cursor.sql('select * from df')
+            duckdb_cursor.register("relation", rel)
+            return duckdb_cursor
 
-        con = temporary_scope()
-        res = con.sql('select * from relation').fetchall()
+        duckdb_cursor = temporary_scope()
+        res = duckdb_cursor.sql('select * from relation').fetchall()
         print(res)
 
-    def test_table(self):
-        con = duckdb.connect()
-        con.execute("create table tbl as select 1")
-        assert [(1,)] == con.table("tbl").fetchall()
+    def test_table(self, duckdb_cursor):
+        duckdb_cursor.execute("create table tbl as select 1")
+        assert [(1,)] == duckdb_cursor.table("tbl").fetchall()
 
     def test_table_function(self):
         assert None != duckdb.table_function
@@ -345,16 +350,16 @@ class TestDuckDBConnection(object):
     def test_values(self):
         assert None != duckdb.values
 
-    def test_view(self):
-        duckdb.execute("create view vw as select range(5)")
-        assert [([0, 1, 2, 3, 4],)] == duckdb.view("vw").fetchall()
-        duckdb.execute("drop view vw")
+    def test_view(self, duckdb_cursor):
+        duckdb_cursor.execute("create view vw as select range(5)")
+        assert [([0, 1, 2, 3, 4],)] == duckdb_cursor.view("vw").fetchall()
+        duckdb_cursor.execute("drop view vw")
 
-    def test_close(self):
-        assert None != duckdb.close
+    def test_close(self, duckdb_cursor):
+        assert None != duckdb_cursor.close
 
-    def test_interrupt(self):
-        assert None != duckdb.interrupt
+    def test_interrupt(self, duckdb_cursor):
+        assert None != duckdb_cursor.interrupt
 
     def test_wrap_shadowing(self):
         pd = NumpyPandas()
