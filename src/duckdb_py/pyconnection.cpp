@@ -1,5 +1,6 @@
 #include "duckdb_python/pyconnection/pyconnection.hpp"
 #include "duckdb_python/module_state.hpp"
+#include <pybind11/critical_section.h>
 
 #include "duckdb/catalog/default/default_types.hpp"
 #include "duckdb/common/arrow/arrow.hpp"
@@ -1782,6 +1783,7 @@ int DuckDBPyConnection::GetRowcount() {
 void DuckDBPyConnection::Close() {
 	con.SetResult(nullptr);
 	D_ASSERT(py::gil_check());
+
 	py::gil_scoped_release release;
 	con.SetConnection(nullptr);
 	con.SetDatabase(nullptr);
@@ -2073,9 +2075,10 @@ static shared_ptr<DuckDBPyConnection> FetchOrCreateInstance(const string &databa
 	config.replacement_scans.emplace_back(PythonReplacementScan::Replace);
 	{
 		D_ASSERT(py::gil_check());
+
 		py::gil_scoped_release release;
 		unique_lock<mutex> lock(res->py_connection_lock);
-		auto database = GetModuleState().instance_cache->GetOrCreateInstance(database_path, config, cache_instance,
+		auto database = GetModuleState().GetInstanceCache()->GetOrCreateInstance(database_path, config, cache_instance,
 		                                                          InstantiateNewInstance);
 		res->con.SetDatabase(std::move(database));
 		res->con.SetConnection(make_uniq<Connection>(res->con.GetDatabase()));
@@ -2228,6 +2231,18 @@ void DuckDBPyConnection::Cleanup() {
 	} catch (const pybind11::error_already_set &) {
 		// Python is shutting down, ignore cleanup failures
 	}
+}
+
+shared_ptr<DuckDBPyConnection> DuckDBPyConnection::GetDefaultConnection() {
+	return GetModuleState().default_connection.Get();
+}
+
+void DuckDBPyConnection::ClearDefaultConnection() {
+	GetModuleState().default_connection.Set(nullptr);
+}
+
+void DuckDBPyConnection::ClearImportCache() {
+	GetModuleState().ResetImportCache();
 }
 
 bool DuckDBPyConnection::IsPandasDataframe(const py::object &object) {

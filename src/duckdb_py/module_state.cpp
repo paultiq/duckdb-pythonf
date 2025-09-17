@@ -11,16 +11,19 @@
 
 namespace duckdb {
 
-// TODO: Make non-static. 
-// Left static because of scope required to efficiently pass import_cache
-// without expensive lookups
-static DuckDBPyModuleState* g_module_state;
+// Static member initialization - required for all static class members in C++
+DuckDBPyModuleState* DuckDBPyModuleState::g_module_state = nullptr;
 
 // Module state constructor
 DuckDBPyModuleState::DuckDBPyModuleState() {
 	// Create caches
 	instance_cache = make_uniq<DBInstanceCache>();
 	import_cache = make_shared_ptr<PythonImportCache>();
+
+#ifdef Py_GIL_DISABLED
+	// Initialize lock object for critical sections
+	lock_object = py::none();
+#endif
 
 	// Detects Python environment and version during intialization
 	// Moved from DuckDBPyConnection::DetectEnvironment()
@@ -52,18 +55,19 @@ DuckDBPyModuleState::DuckDBPyModuleState() {
 
 }
 
+
 DuckDBPyModuleState &GetModuleState() {
 	// TODO: Externalize this static cache when adding multi-interpreter support
 	// For now, single interpreter assumption allows simple static caching
-	if (!g_module_state) {
+	if (!DuckDBPyModuleState::g_module_state) {
 		throw InternalException("Module state not initialized - call SetModuleState() during module init");
 	}
-	return *g_module_state;
+	return *DuckDBPyModuleState::g_module_state;
 }
 
 void SetModuleState(DuckDBPyModuleState *state) {
 	printf("DEBUG: SetModuleState() called - initializing static cache\n");
-	g_module_state = state;
+	DuckDBPyModuleState::g_module_state = state;
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyModuleState::GetDefaultConnection() {
@@ -85,5 +89,10 @@ PythonImportCache* DuckDBPyModuleState::GetImportCache() {
 void DuckDBPyModuleState::ResetImportCache() {
 	import_cache.reset();
 }
+
+DBInstanceCache* DuckDBPyModuleState::GetInstanceCache() {
+	return instance_cache.get();
+}
+
 
 } // namespace duckdb

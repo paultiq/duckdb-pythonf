@@ -359,7 +359,6 @@ private:
 	                               bool side_effects);
 	void RegisterArrowObject(const py::object &arrow_object, const string &name);
 	vector<unique_ptr<SQLStatement>> GetStatements(const py::object &query);
-
 };
 
 template <typename T>

@@ -11,17 +11,18 @@
 #include "duckdb_python/pybind11/pybind_wrapper.hpp"
 #include "duckdb/common/shared_ptr.hpp"
 #include "duckdb/main/db_instance_cache.hpp"
+#include "duckdb/main/database.hpp"
 #include "duckdb_python/import_cache/python_import_cache.hpp"
 #include "duckdb_python/pyconnection/pyconnection.hpp"
+#include <pybind11/critical_section.h>
 
 namespace duckdb {
 
+
 // Module state structure to hold per-interpreter state
 struct DuckDBPyModuleState {
-	// Core state
+	// TODO: Make private / move behind a thread-safe accessor
 	DefaultConnectionHolder default_connection;
-	shared_ptr<PythonImportCache> import_cache;
-	std::unique_ptr<DBInstanceCache> instance_cache;
 
 	// Python environment tracking
 	PythonEnvironmentType environment = PythonEnvironmentType::NORMAL;
@@ -29,16 +30,26 @@ struct DuckDBPyModuleState {
 
 	DuckDBPyModuleState();
 
-	// Encapsulated default connection operations for future free threading control
 	shared_ptr<DuckDBPyConnection> GetDefaultConnection();
 	void SetDefaultConnection(shared_ptr<DuckDBPyConnection> connection);
 	void ClearDefaultConnection();
 
-	// Encapsulated import cache operations for future free threading control
 	PythonImportCache* GetImportCache();
 	void ResetImportCache();
 
+	DBInstanceCache* GetInstanceCache();
+
 private:
+	shared_ptr<PythonImportCache> import_cache;
+	std::unique_ptr<DBInstanceCache> instance_cache;
+#ifdef Py_GIL_DISABLED
+	py::object lock_object;
+#endif
+
+	// Static module state cache for performance optimization
+	// TODO: Replace with proper per-interpreter state for multi-interpreter support
+	static DuckDBPyModuleState* g_module_state;
+
 	// Non-copyable
 	DuckDBPyModuleState(const DuckDBPyModuleState &) = delete;
 	DuckDBPyModuleState &operator=(const DuckDBPyModuleState &) = delete;
