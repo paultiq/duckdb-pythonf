@@ -57,28 +57,28 @@ class TestDuckDBConnection(object):
 
     def test_begin_commit(self):
         duckdb.begin()
-        duckdb.execute("create table tbl as select 1")
+        duckdb.execute("create table tbl_1 as select 1")
         duckdb.commit()
-        res = duckdb.table("tbl")
-        duckdb.execute("drop table tbl")
+        res = duckdb.table("tbl_1")
+        duckdb.execute("drop table tbl_1")
 
     def test_begin_rollback(self):
         duckdb.begin()
-        duckdb.execute("create table tbl as select 1")
+        duckdb.execute("create table tbl_1rb as select 1")
         duckdb.rollback()
         with pytest.raises(duckdb.CatalogException):
             # Table does not exist
-            res = duckdb.table("tbl")
+            res = duckdb.table("tbl_1rb")
 
     def test_cursor(self):
-        duckdb.execute("create table tbl as select 3")
+        duckdb.execute("create table tbl_3 as select 3")
         duckdb_cursor = duckdb.cursor()
-        res = duckdb_cursor.table("tbl").fetchall()
+        res = duckdb_cursor.table("tbl_3").fetchall()
         assert res == [(3,)]
-        duckdb_cursor.execute("drop table tbl")
+        duckdb_cursor.execute("drop table tbl_3")
         with pytest.raises(duckdb.CatalogException):
             # 'tbl' no longer exists
-            duckdb.table("tbl")
+            duckdb.table("tbl_3")
 
     def test_cursor_lifetime(self):
         con = duckdb.connect()
@@ -103,12 +103,12 @@ class TestDuckDBConnection(object):
         assert res == ref
 
     def test_duplicate(self):
-        duckdb.execute("create table tbl as select 5")
+        duckdb.execute("create table tbl_5 as select 5")
         dup_conn = duckdb.duplicate()
-        dup_conn.table("tbl").fetchall()
-        duckdb.execute("drop table tbl")
+        dup_conn.table("tbl_5").fetchall()
+        duckdb.execute("drop table tbl_5")
         with pytest.raises(duckdb.CatalogException):
-            dup_conn.table("tbl").fetchall()
+            dup_conn.table("tbl_5").fetchall()
 
     def test_readonly_properties(self):
         duckdb.execute("select 42")
@@ -123,11 +123,11 @@ class TestDuckDBConnection(object):
     def test_executemany(self):
         # executemany does not keep an open result set
         # TODO: shouldn't we also have a version that executes a query multiple times with different parameters, returning all of the results?
-        duckdb.execute("create table tbl (i integer, j varchar)")
-        duckdb.executemany("insert into tbl VALUES (?, ?)", [(5, 'test'), (2, 'duck'), (42, 'quack')])
-        res = duckdb.table("tbl").fetchall()
+        duckdb.execute("create table tbl_many (i integer, j varchar)")
+        duckdb.executemany("insert into tbl_many VALUES (?, ?)", [(5, 'test'), (2, 'duck'), (42, 'quack')])
+        res = duckdb.table("tbl_many").fetchall()
         assert res == [(5, 'test'), (2, 'duck'), (42, 'quack')]
-        duckdb.execute("drop table tbl")
+        duckdb.execute("drop table tbl_many")
 
     def test_pystatement(self):
         with pytest.raises(duckdb.ParserException, match='seledct'):
@@ -163,8 +163,8 @@ class TestDuckDBConnection(object):
             duckdb.execute(statements[0])
         assert duckdb.execute(statements[0], {'1': 42}).fetchall() == [(42,)]
 
-        duckdb.execute("create table tbl(a integer)")
-        statements = duckdb.extract_statements('insert into tbl select $1')
+        duckdb.execute("create table tbl_a(a integer)")
+        statements = duckdb.extract_statements('insert into tbl_a select $1')
         assert statements[0].expected_result_type == [
             duckdb.ExpectedResultType.CHANGED_ROWS,
             duckdb.ExpectedResultType.QUERY_RESULT,
@@ -174,23 +174,23 @@ class TestDuckDBConnection(object):
         ):
             duckdb.executemany(statements[0])
         duckdb.executemany(statements[0], [(21,), (22,), (23,)])
-        assert duckdb.table('tbl').fetchall() == [(21,), (22,), (23,)]
-        duckdb.execute("drop table tbl")
+        assert duckdb.table('tbl_a').fetchall() == [(21,), (22,), (23,)]
+        duckdb.execute("drop table tbl_a")
 
     def test_fetch_arrow_table(self):
         # Needed for 'fetch_arrow_table'
         pyarrow = pytest.importorskip("pyarrow")
 
-        duckdb.execute("Create Table test (a integer)")
+        duckdb.execute("Create Table test_arrow_tble (a integer)")
 
         for i in range(1024):
             for j in range(2):
-                duckdb.execute("Insert Into test values ('" + str(i) + "')")
-        duckdb.execute("Insert Into test values ('5000')")
-        duckdb.execute("Insert Into test values ('6000')")
+                duckdb.execute("Insert Into test_arrow_tble values ('" + str(i) + "')")
+        duckdb.execute("Insert Into test_arrow_tble values ('5000')")
+        duckdb.execute("Insert Into test_arrow_tble values ('6000')")
         sql = '''
         SELECT  a, COUNT(*) AS repetitions
-        FROM    test
+        FROM    test_arrow_tble
         GROUP BY a
         '''
 
@@ -200,7 +200,7 @@ class TestDuckDBConnection(object):
 
         arrow_df = arrow_table.to_pandas()
         assert result_df['repetitions'].sum() == arrow_df['repetitions'].sum()
-        duckdb.execute("drop table test")
+        duckdb.execute("drop table test_arrow_tble")
 
     def test_fetch_df(self):
         ref = [([1, 2, 3],)]
@@ -210,22 +210,22 @@ class TestDuckDBConnection(object):
         assert res == ref
 
     def test_fetch_df_chunk(self):
-        duckdb.execute("CREATE table t as select range a from range(3000);")
-        query = duckdb.execute("SELECT a FROM t")
+        duckdb.execute("CREATE table t_df_chunk as select range a from range(3000);")
+        query = duckdb.execute("SELECT a FROM t_df_chunk")
         cur_chunk = query.fetch_df_chunk()
         assert cur_chunk['a'][0] == 0
         assert len(cur_chunk) == 2048
         cur_chunk = query.fetch_df_chunk()
         assert cur_chunk['a'][0] == 2048
         assert len(cur_chunk) == 952
-        duckdb.execute("DROP TABLE t")
+        duckdb.execute("DROP TABLE t_df_chunk")
 
     def test_fetch_record_batch(self):
         # Needed for 'fetch_arrow_table'
         pyarrow = pytest.importorskip("pyarrow")
 
-        duckdb.execute("CREATE table t as select range a from range(3000);")
-        duckdb.execute("SELECT a FROM t")
+        duckdb.execute("CREATE table t_record_batch as select range a from range(3000);")
+        duckdb.execute("SELECT a FROM t_record_batch")
         record_batch_reader = duckdb.fetch_record_batch(1024)
         chunk = record_batch_reader.read_all()
         assert len(chunk) == 3000
@@ -289,10 +289,10 @@ class TestDuckDBConnection(object):
     def test_register_relation(self):
         con = duckdb.connect()
         rel = con.sql('select [5,4,3]')
-        con.register("relation", rel)
+        con.register("relation_rr", rel)
 
-        con.sql("create table tbl as select * from relation")
-        assert con.table('tbl').fetchall() == [([5, 4, 3],)]
+        con.sql("create table tbl_reg_rel as select * from relation_rr")
+        assert con.table('tbl_reg_rel').fetchall() == [([5, 4, 3],)]
 
     def test_unregister_problematic_behavior(self, duckdb_cursor):
         # We have a VIEW called 'vw' in the Catalog
@@ -333,8 +333,8 @@ class TestDuckDBConnection(object):
 
     def test_table(self):
         con = duckdb.connect()
-        con.execute("create table tbl as select 1")
-        assert [(1,)] == con.table("tbl").fetchall()
+        con.execute("create table tbl_test_table as select 1")
+        assert [(1,)] == con.table("tbl_test_table").fetchall()
 
     def test_table_function(self):
         assert None != duckdb.table_function
