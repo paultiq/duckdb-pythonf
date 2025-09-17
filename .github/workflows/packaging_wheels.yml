@@ -54,6 +54,7 @@ jobs:
       CIBW_TEST_SKIP: ${{ inputs.testsuite == 'none' && '*' || '*-macosx_universal2' }}
       CIBW_TEST_SOURCES: tests
       CIBW_BEFORE_TEST: >
+        sccache --show-stats && 
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
@@ -117,7 +118,6 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: >
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache
-          CIBW_BEFORE_TEST_LINUX: sccache --show-stats 
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
