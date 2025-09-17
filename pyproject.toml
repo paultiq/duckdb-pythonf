@@ -124,7 +124,6 @@ if.env.COVERAGE = false
 inherit.cmake.define = "append"
 cmake.define.DISABLE_UNITY = "1"
 
-
 [tool.scikit-build.sdist]
 include = [
     "README.md",
@@ -382,24 +381,3 @@ manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
 
-
-[tool.cibuildwheel.linux]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
-before-build = [
-  "if [ \"$(uname -m)\" = \"aarch64\" ]; then ARCH=aarch64; else ARCH=x86_64; fi",
-  "curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz",
-  "cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin",
-  "sccache --show-stats"]
-before-test = ["sccache --show-stats"]
-
-[tool.cibuildwheel.macos]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
-before-build = ["brew install sccache"]
-
-[tool.cibuildwheel.windows]
-before-build = ["choco install ccache"]
-
-# Override for free threading builds (cp314t) - set PYTHON_GIL=0
-[[tool.cibuildwheel.overrides]]
-select = "cp314t-*"
-environment = { PYTHON_GIL = "0" }
