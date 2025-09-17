@@ -267,11 +267,9 @@ def spark():
 
 
 @pytest.fixture(scope='function')
-def duckdb_cursor():
-    connection = duckdb.connect('')
-    yield connection
-    connection.close()
-
+def duckdb_cursor(tmp_path):
+    with duckdb.connect(tmp_path / "mytest") as connection:
+        yield connection
 
 @pytest.fixture(scope='function')
 def integers(duckdb_cursor):
