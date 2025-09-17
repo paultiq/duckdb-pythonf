@@ -85,8 +85,8 @@ jobs:
         with:
           version: "0.8.16"
           enable-cache: false
-          cache-suffix: -${{ inputs.python_version }}-${{ inputs.os }}
-          python-version: ${{ inputs.python_version }}
+          cache-suffix: -${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
+          python-version: ${{ env.PYTHON_VERSION_TO_USE }}
 
       - name: Build wheel
         uses: pypa/cibuildwheel@v3.1
@@ -98,7 +98,7 @@ jobs:
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ inputs.python_version }}-${{ inputs.os }}
+          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
           path: wheelhouse/
 
   test:
@@ -131,13 +131,13 @@ jobs:
         with:
           version: "0.8.16"
           enable-cache: false
-          cache-suffix: -${{ inputs.python_version }}-${{ inputs.os }}
-          python-version: ${{ inputs.python_version }}
+          cache-suffix: -${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
+          python-version: ${{ env.PYTHON_VERSION_TO_USE }}
 
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:
-          name: wheel-${{ inputs.python_version }}-${{ inputs.os }}
+          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
           path: wheelhouse/
 
       - name: Install dependencies
