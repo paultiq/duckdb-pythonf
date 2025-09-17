@@ -1,15 +1,6 @@
 name: Stress Tests
 on:
   push:
-    inputs:
-      os:
-        default: ubuntu-24.04
-      python_version:
-        default: cp314
-      testsuite:
-        default: fast
-      test_iterations:
-        default: 3
   workflow_dispatch:
     inputs:
       os:
@@ -60,10 +51,16 @@ on:
         required: false
         default: 3
 
+env:
+  OS_TO_USE: ${{ inputs.os || 'ubuntu-24.04' }}
+  PYTHON_VERSION_TO_USE: ${{ inputs.python_version || 'cp314' }}
+  TESTSUITE_TO_USE: ${{ inputs.testsuite || 'fast' }}
+  ITERATIONS_TO_USE: ${{ inputs.test_iterations || '3' }}
+
 jobs:
   build:
-    name: 'Build wheel: ${{ inputs.python_version }}-${{ inputs.os }}'
-    runs-on: ${{ inputs.os }}
+    name: 'Build wheel: ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}'
+    runs-on: ${{ env.OS_TO_USE }}
 
     steps:
       - name: Checkout DuckDB Python
