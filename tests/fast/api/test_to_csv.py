@@ -1,5 +1,4 @@
 import duckdb
-import tempfile
 import os
 import pandas._testing as tm
 import datetime
@@ -10,8 +9,8 @@ from conftest import NumpyPandas, ArrowPandas, getTimeSeriesData
 
 class TestToCSV(object):
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_basic_to_csv(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_basic_to_csv(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame({'a': [5, 3, 23, 2], 'b': [45, 234, 234, 2]})
         rel = duckdb.from_df(df)
 
@@ -21,8 +20,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_sep(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_sep(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame({'a': [5, 3, 23, 2], 'b': [45, 234, 234, 2]})
         rel = duckdb.from_df(df)
 
@@ -32,8 +31,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_na_rep(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_na_rep(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame({'a': [5, None, 23, 2], 'b': [45, 234, 234, 2]})
         rel = duckdb.from_df(df)
 
@@ -43,8 +42,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_header(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_header(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame({'a': [5, None, 23, 2], 'b': [45, 234, 234, 2]})
         rel = duckdb.from_df(df)
 
@@ -54,8 +53,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_quotechar(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_quotechar(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame({'a': ["\'a,b,c\'", None, "hello", "bye"], 'b': [45, 234, 234, 2]})
         rel = duckdb.from_df(df)
 
@@ -65,8 +64,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_escapechar(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_escapechar(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame(
             {
                 "c_bool": [True, False],
@@ -81,8 +80,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_date_format(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_date_format(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame(getTimeSeriesData())
         dt_index = df.index
         df = pandas.DataFrame({"A": dt_index, "B": dt_index.shift(1)}, index=dt_index)
@@ -94,8 +93,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_timestamp_format(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_timestamp_format(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         data = [datetime.time(hour=23, minute=1, second=34, microsecond=234345)]
         df = pandas.DataFrame({'0': pandas.Series(data=data, dtype='object')})
         rel = duckdb.from_df(df)
@@ -106,8 +105,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_quoting_off(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_quoting_off(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame({'a': ['string1', 'string2', 'string3']})
         rel = duckdb.from_df(df)
         rel.to_csv(temp_file_name, quoting=None)
@@ -116,8 +115,8 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_quoting_on(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_quoting_on(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
         df = pandas.DataFrame({'a': ['string1', 'string2', 'string3']})
         rel = duckdb.from_df(df)
         rel.to_csv(temp_file_name, quoting="force")
@@ -126,8 +125,9 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_quoting_quote_all(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_quoting_quote_all(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame({'a': ['string1', 'string2', 'string3']})
         rel = duckdb.from_df(df)
         rel.to_csv(temp_file_name, quoting=csv.QUOTE_ALL)
@@ -136,8 +136,9 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_encoding_incorrect(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_encoding_incorrect(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame({'a': ['string1', 'string2', 'string3']})
         rel = duckdb.from_df(df)
         with pytest.raises(
@@ -146,8 +147,9 @@ class TestToCSV(object):
             rel.to_csv(temp_file_name, encoding="nope")
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_encoding_correct(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_encoding_correct(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame({'a': ['string1', 'string2', 'string3']})
         rel = duckdb.from_df(df)
         rel.to_csv(temp_file_name, encoding="UTF-8")
@@ -155,8 +157,9 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_compression_gzip(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_compression_gzip(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame({'a': ['string1', 'string2', 'string3']})
         rel = duckdb.from_df(df)
         rel.to_csv(temp_file_name, compression="gzip")
@@ -164,8 +167,9 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_partition(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_partition(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame(
             {
                 "c_category": ['a', 'a', 'b', 'b'],
@@ -190,8 +194,9 @@ class TestToCSV(object):
         assert csv_rel.execute().fetchall() == expected
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_partition_with_columns_written(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_partition_with_columns_written(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame(
             {
                 "c_category": ['a', 'a', 'b', 'b'],
@@ -210,8 +215,9 @@ class TestToCSV(object):
         assert res.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_overwrite(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_overwrite(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame(
             {
                 "c_category_1": ['a', 'a', 'b', 'b'],
@@ -238,8 +244,9 @@ class TestToCSV(object):
         assert csv_rel.execute().fetchall() == expected
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_overwrite_with_columns_written(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_overwrite_with_columns_written(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame(
             {
                 "c_category_1": ['a', 'a', 'b', 'b'],
@@ -264,8 +271,9 @@ class TestToCSV(object):
         assert res.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_overwrite_not_enabled(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_overwrite_not_enabled(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame(
             {
                 "c_category_1": ['a', 'a', 'b', 'b'],
@@ -282,8 +290,9 @@ class TestToCSV(object):
             rel.to_csv(temp_file_name, header=True, partition_by=["c_category_1"])
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_per_thread_output(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_per_thread_output(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         num_threads = duckdb.sql("select current_setting('threads')").fetchone()[0]
         print('num_threads:', num_threads)
         df = pandas.DataFrame(
@@ -301,8 +310,9 @@ class TestToCSV(object):
         assert rel.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_to_csv_use_tmp_file(self, pandas):
-        temp_file_name = os.path.join(tempfile.mkdtemp(), next(tempfile._get_candidate_names()))
+    def test_to_csv_use_tmp_file(self, pandas, tmp_path):
+        temp_file_name = str(tmp_path / "test.csv")
+
         df = pandas.DataFrame(
             {
                 "c_category_1": ['a', 'a', 'b', 'b'],
