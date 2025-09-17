@@ -59,8 +59,8 @@ env:
 
 jobs:
   build:
-    name: 'Build wheel: ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}'
-    runs-on: ${{ env.OS_TO_USE }}
+    name: "Build wheel: ${{ inputs.python_version || 'cp314' }}-${{ inputs.os || 'ubuntu-24.04' }}"
+    runs-on: ${{ inputs.os || 'ubuntu-24.04' }}
 
     steps:
       - name: Checkout DuckDB Python
