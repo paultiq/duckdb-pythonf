@@ -1,6 +1,6 @@
 name: Stress Tests
 on:
-  pull_request:
+  push:
     inputs:
       os:
         default: ubuntu-24.04
