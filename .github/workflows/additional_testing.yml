@@ -109,14 +109,15 @@ jobs:
       fail-fast: false
       matrix:
         pytest_config:
-          - name: "Random Order"
+          - name: "Random Order"  # randomization is automatic due to pytest-randomly
             args: ""
             iterations: ${{ inputs.test_iterations || 3 }}
-          - name: "Multiprocess"
+          - name: "Multiprocess"  # uses pytest-xdist
             args: "-n auto"
             iterations: ${{ inputs.test_iterations || 3 }}
-          - name: "Threaded"
-            args: "--parallel-threads=4 --iterations=8 --ignore"
+          - name: "Threaded"  # uses pytest-run-parallel
+            # TODO: Update to use threading specific tests or explicitly mark unsafe tests. test_module was chosen as an example. 
+            args: "--parallel-threads=4 --iterations=8 tests/fast/test_module.py --ignore"
             iterations: 1
 
     steps:
