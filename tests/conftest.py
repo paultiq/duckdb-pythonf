@@ -71,23 +71,6 @@ def pytest_runtest_call(item):
                 raise e
 
 
-@pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_call(item):
-    """Convert pandas requirement exceptions to skips"""
-    
-    outcome = yield
-
-    # TODO: Remove skip when Pandas releases for 3.14. After, consider bumping to 3.15
-    if sys.version_info[:2] == (3, 14): 
-        try:
-            outcome.get_result()
-        except Exception as e:
-            if "'pandas' is required for this operation but it was not installed" in str(e):
-                pytest.skip("pandas not available - test requires pandas functionality")
-            else:
-                raise e
-
-
 def pytest_collection_modifyitems(config, items):
     tests_to_skip = config.getoption("--skiplist")
     if not tests_to_skip:
