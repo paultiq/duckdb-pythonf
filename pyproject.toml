@@ -311,6 +311,9 @@ filterwarnings = [
     "ignore:is_datetime64tz_dtype is deprecated:DeprecationWarning",
 ]
 timeout = 300  # don't let individual tests run for more than 5 minutes
+thread_unsafe_fixtures = [  # https://pypi.org/project/pytest-run-parallel/
+    'default_con'
+]
 
 [tool.coverage.run]
 branch = true

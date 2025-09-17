@@ -271,6 +271,16 @@ def duckdb_cursor(tmp_path):
     with duckdb.connect(tmp_path / "mytest") as connection:
         yield connection
 
+
+@pytest.fixture(scope='function')
+def default_con():
+    # ensures each test uses a fresh default connection to avoid test leakage
+    # threading_unsafe fixture, marked as such in pyproject.toml
+    duckdb.default_connection().close()
+    with duckdb.default_connection() as conn:
+        yield conn
+
+
 @pytest.fixture(scope='function')
 def integers(duckdb_cursor):
     cursor = duckdb_cursor
