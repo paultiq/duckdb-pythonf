@@ -227,6 +227,10 @@ test = [ # dependencies used for running tests
     "pytest",
     "pytest-reraise",
     "pytest-timeout",
+    "pytest-xdist", #  multi-processed tests, if `-n <num_workers> | auto`
+    "pytest-randomly", # randomizes test order to ensure no test dependencies, enabled on install
+    "pytest-run-parallel", # multi-threaded tests, if `--parallel-threads=N --iterations=N`
+    "pytest-timestamper",   # Adds timestamps to test output
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
@@ -306,6 +310,7 @@ filterwarnings = [
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
     "ignore:is_datetime64tz_dtype is deprecated:DeprecationWarning",
 ]
+timeout = 300  # don't let individual tests run for more than 5 minutes
 
 [tool.coverage.run]
 branch = true
@@ -382,10 +387,36 @@ manylinux-pypy_aarch64-image = "manylinux_2_28"
 enable = ["cpython-freethreading", "cpython-prerelease"]
 
 [tool.cibuildwheel.linux]
-before-build = ["yum install -y ccache"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+before-build = [
+  "if [ \"$(uname -m)\" = \"aarch64\" ]; then ARCH=aarch64; else ARCH=x86_64; fi",
+  "curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz",
+  "cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin",
+  "sccache --show-stats"]
+before-test = ["sccache --show-stats"]
 
 [tool.cibuildwheel.macos]
-before-build = ["brew install ccache"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+before-build = ["brew install sccache"]
 
 [tool.cibuildwheel.windows]
-before-build = ["choco install ccache"]
+environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
+before-build = [
+     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\"",
+     "choco install sccache"]
+
+[[tool.scikit-build.overrides]]
+# Windows Free-Threading 
+if.platform-system = "^win32"
+if.abi-flags = "t"
+inherit.cmake.define = "append"
+cmake.define.CMAKE_BUILD_TYPE=""
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.args = [
+   "-G", "Ninja",
+   "--log-level=DEBUG",
+]
+cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
+cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
