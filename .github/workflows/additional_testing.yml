@@ -147,7 +147,7 @@ jobs:
             echo ""
             echo "${{ matrix.pytest_config.name }} Run $i/$ITERATIONS:"
             echo "--------"
-            uv run pytest $PYTEST_ARGS "$TEST_TARGET" --verbose
+            uv run pytest $PYTEST_ARGS "$TEST_TARGET" --durations=5
             if [ $? -ne 0 ]; then
               echo "${{ matrix.pytest_config.name }} Run $i failed!"
             else
