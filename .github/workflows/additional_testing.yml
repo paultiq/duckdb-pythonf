@@ -89,7 +89,7 @@ jobs:
         uses: pypa/cibuildwheel@v3.1
         env:
           CIBW_ARCHS: auto
-          CIBW_BUILD: ${{ inputs.python_version }}-*
+          CIBW_BUILD: ${{ env.PYTHON_VERSION_TO_USE }}-*
           CIBW_TEST_SKIP: '*'
 
       - name: Upload wheel
