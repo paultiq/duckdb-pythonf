@@ -19,17 +19,16 @@ class TestQueryInterruption(object):
         condition=platform.system() == "Emscripten",
         reason="Emscripten builds cannot use threads",
     )
+    @pytest.mark.timeout(5)
     def test_query_interruption(self):
         con = duckdb.connect()
         thread = threading.Thread(target=send_keyboard_interrupt)
         # Start the thread
         thread.start()
         try:
-            res = con.execute('select count(*) from range(100000000000)').fetchall()
-        except RuntimeError:
-            # If this is not reached, we could not cancel the query before it completed
-            # indicating that the query interruption functionality is broken
-            assert True
-        except KeyboardInterrupt:
-            pytest.fail()
-        thread.join()
+            with pytest.raises(KeyboardInterrupt):
+                res = con.execute('select * from range(100000),range(100000)').fetchall()
+
+        finally:
+            # Ensure the thread completes regardless of what happens
+            thread.join()
