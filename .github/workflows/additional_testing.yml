@@ -1,6 +1,15 @@
 name: Stress Tests
 on:
   pull_request:
+    inputs:
+      os:
+        default: ubuntu-24.04
+      python_version:
+        default: cp314
+      testsuite:
+        default: fast
+      test_iterations:
+        default: 3
   workflow_dispatch:
     inputs:
       os:
