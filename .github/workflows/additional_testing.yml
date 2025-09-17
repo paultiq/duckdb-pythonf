@@ -1,11 +1,13 @@
 name: Stress Tests
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       os:
         description: Operating System
         required: true
         type: choice
+        default: ubuntu-24.04
         options:
           - windows-2025
           - ubuntu-24.04
@@ -16,6 +18,7 @@ on:
         description: Python Version
         required: true
         type: choice
+        default: cp314
         options:
           - cp39
           - cp310
