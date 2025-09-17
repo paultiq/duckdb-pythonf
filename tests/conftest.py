@@ -9,6 +9,13 @@ import warnings
 from importlib import import_module
 import sys
 
+# Safeguard to ensure GIL is disabled if this is a free-threading build to ensure test validity
+if 'free-threading' in sys.version:
+    import sysconfig
+    assert sysconfig.get_config_var('Py_GIL_DISABLED') == 1, f"Py_GIL_DISABLED must be 1 in free-threading build, got: {sysconfig.get_config_var('Py_GIL_DISABLED')}"
+    print(f"Free-threading Python detected: {sys.version}")
+    print(f"Py_GIL_DISABLED = {sysconfig.get_config_var('Py_GIL_DISABLED')}")
+
 try:
     # need to ignore warnings that might be thrown deep inside pandas's import tree (from dateutil in this case)
     warnings.simplefilter(action="ignore", category=DeprecationWarning)
@@ -64,7 +71,7 @@ def pytest_runtest_call(item):
     if sys.version_info[:2] == (3, 14): 
         try:
             outcome.get_result()
-        except Exception as e:
+        except duckdb.InvalidInputException as e:
             if "'pandas' is required for this operation but it was not installed" in str(e):
                 pytest.skip("pandas not available - test requires pandas functionality")
             else:

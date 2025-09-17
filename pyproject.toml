@@ -72,6 +72,7 @@ minimum-version = "0.10"
 cmake.version = ">=3.29.0"
 ninja.version = ">=1.10"
 ninja.make-fallback = false
+cmake.build-type = "Debug"
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 
 [tool.scikit-build.wheel]
@@ -106,11 +107,11 @@ cmake.define.CMAKE_C_FLAGS = "--coverage -O0"
 cmake.define.CMAKE_SHARED_LINKER_FLAGS = "--coverage"
 
 # Override: if we're in editable mode then make sure a build dir is set. Note that COVERAGE runs have their own
-#   build-dir, and we don't want to interfere with that. We're also disabling unity builds to help with debugging.
+#   build-dir, and we don't want to interfere with that.
 [[tool.scikit-build.overrides]]
 if.state = "editable"
 if.env.COVERAGE = false
-build-dir = "build/debug/"
+build-dir = "build/$UV_PYTHON/"
 editable.rebuild = true
 editable.mode = "redirect"
 cmake.build-type = "Debug"
@@ -122,6 +123,7 @@ if.state = "editable"
 if.env.COVERAGE = false
 inherit.cmake.define = "append"
 cmake.define.DISABLE_UNITY = "1"
+
 
 [tool.scikit-build.sdist]
 include = [
@@ -227,10 +229,6 @@ test = [ # dependencies used for running tests
     "pytest",
     "pytest-reraise",
     "pytest-timeout",
-    "pytest-xdist",         # Parallel (multi-process)
-    # "pytest-randomly",      # Randomizes order of tests 
-    "pytest-timestamper",   # Adds timestamps to test output
-    "pytest-run-parallel",  # For free-threading testing
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
@@ -383,7 +381,6 @@ manylinux-x86_64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
-enable = ["cpython-freethreading", "cpython-prerelease"]
 
 
 [tool.cibuildwheel.linux]
@@ -400,23 +397,9 @@ environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RES
 before-build = ["brew install sccache"]
 
 [tool.cibuildwheel.windows]
-environment-pass = ["SCCACHE_GHA_ENABLED", "ACTIONS_RUNTIME_TOKEN", "ACTIONS_RESULTS_URL", "ACTIONS_CACHE_SERVICE_V2", "SCCACHE_C_CUSTOM_CACHE_BUSTER", "PYTHON_GIL"]
-before-build = [
-     "del \"C:\\Strawberry\\c\\bin\\ccache.exe\"",
-     "choco install sccache"]
+before-build = ["choco install ccache"]
 
-[[tool.scikit-build.overrides]]
-# Windows Free-Threading 
-if.platform-system = "^win32"
-if.abi-flags = "t"
-inherit.cmake.define = "append"
-cmake.define.CMAKE_BUILD_TYPE=""
-cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
-cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
-cmake.args = [
-   "-G", "Ninja",
-   "--log-level=DEBUG",
-]
-cmake.define.CMAKE_C_COMPILER_LAUNCHER=""
-cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=""
+# Override for free threading builds (cp314t) - set PYTHON_GIL=0
+[[tool.cibuildwheel.overrides]]
+select = "cp314t-*"
+environment = { PYTHON_GIL = "0" }
