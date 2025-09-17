@@ -56,6 +56,9 @@ env:
   PYTHON_VERSION_TO_USE: ${{ inputs.python_version || 'cp314' }}
   TESTSUITE_TO_USE: ${{ inputs.testsuite || 'fast' }}
   ITERATIONS_TO_USE: ${{ inputs.test_iterations || '3' }}
+  # Disable the ccache install
+  CIBW_BEFORE_BUILD: '' 
+
 
 jobs:
   build:
