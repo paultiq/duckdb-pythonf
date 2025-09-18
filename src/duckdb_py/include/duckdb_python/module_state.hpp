@@ -18,12 +18,10 @@
 
 namespace duckdb {
 
-
 // Module state structure to hold per-interpreter state
 struct DuckDBPyModuleState {
 	// TODO: Make private / move behind a thread-safe accessor
 	shared_ptr<DuckDBPyConnection> default_connection_ptr;
-	mutex default_connection_mutex;
 
 	// Python environment tracking
 	PythonEnvironmentType environment = PythonEnvironmentType::NORMAL;
@@ -35,24 +33,24 @@ struct DuckDBPyModuleState {
 	void SetDefaultConnection(shared_ptr<DuckDBPyConnection> connection);
 	void ClearDefaultConnection();
 
-	PythonImportCache* GetImportCache();
+	PythonImportCache *GetImportCache();
 	void ClearImportCache();
 
-	DBInstanceCache* GetInstanceCache();
+	DBInstanceCache *GetInstanceCache();
 
-	static DuckDBPyModuleState& GetGlobalModuleState();
-	static void SetGlobalModuleState(DuckDBPyModuleState* state);
+	static DuckDBPyModuleState &GetGlobalModuleState();
+	static void SetGlobalModuleState(DuckDBPyModuleState *state);
 
 private:
 	PythonImportCache import_cache;
 	std::unique_ptr<DBInstanceCache> instance_cache;
 #ifdef Py_GIL_DISABLED
-	py::object lock_object;
+	py::object default_con_lock;
 #endif
 
-	// Static module state cache for performance optimization
-	// TODO: Replace with proper per-interpreter state for multi-interpreter support
-	static DuckDBPyModuleState* g_module_state;
+	    // Static module state cache for performance optimization
+	    // TODO: Replace with proper per-interpreter state for multi-interpreter support
+	    static DuckDBPyModuleState *g_module_state;
 
 	// Non-copyable
 	DuckDBPyModuleState(const DuckDBPyModuleState &) = delete;

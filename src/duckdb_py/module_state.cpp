@@ -12,7 +12,7 @@
 #include <thread>
 
 // Enable debug prints for performance analysis
-#define DEBUG_MODULE_STATE 1
+#define DEBUG_MODULE_STATE 0
 
 namespace duckdb {
 
@@ -31,7 +31,7 @@ DuckDBPyModuleState::DuckDBPyModuleState() {
 #ifdef Py_GIL_DISABLED
 	// Initialize lock object for critical sections
 	// TODO: Consider moving to finer-grained locks
-	lock_object = py::none();
+	default_con_lock = py::none();
 #endif
 
 	// Detects Python environment and version during intialization
@@ -91,7 +91,10 @@ void SetModuleState(DuckDBPyModuleState *state) {
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyModuleState::GetDefaultConnection() {
-	lock_guard<mutex> guard(default_connection_mutex);
+#if defined(Py_GIL_DISABLED)
+	// TODO: Consider whether a mutex vs a scoped_critical_section
+	py::scoped_critical_section guard(default_con_lock);
+#endif
 	// Reproduce exact logic from original DefaultConnectionHolder::Get()
 	if (!default_connection_ptr || default_connection_ptr->con.ConnectionIsClosed()) {
 		py::dict config_dict;
@@ -101,12 +104,16 @@ shared_ptr<DuckDBPyConnection> DuckDBPyModuleState::GetDefaultConnection() {
 }
 
 void DuckDBPyModuleState::SetDefaultConnection(shared_ptr<DuckDBPyConnection> connection) {
-	lock_guard<mutex> guard(default_connection_mutex);
+#if defined(Py_GIL_DISABLED)
+	py::scoped_critical_section guard(default_con_lock);
+#endif
 	default_connection_ptr = std::move(connection);
 }
 
 void DuckDBPyModuleState::ClearDefaultConnection() {
-	lock_guard<mutex> guard(default_connection_mutex);
+#if defined(Py_GIL_DISABLED)
+	py::scoped_critical_section guard(default_con_lock);
+#endif
 	default_connection_ptr = nullptr;
 }
 
