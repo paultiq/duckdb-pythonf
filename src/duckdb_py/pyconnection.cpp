@@ -2079,7 +2079,7 @@ static shared_ptr<DuckDBPyConnection> FetchOrCreateInstance(const string &databa
 		py::gil_scoped_release release;
 		unique_lock<mutex> lock(res->py_connection_lock);
 		auto database = GetModuleState().GetInstanceCache()->GetOrCreateInstance(database_path, config, cache_instance,
-		                                                          InstantiateNewInstance);
+		                                                                         InstantiateNewInstance);
 		res->con.SetDatabase(std::move(database));
 		res->con.SetConnection(make_uniq<Connection>(res->con.GetDatabase()));
 	}
@@ -2174,7 +2174,6 @@ PythonImportCache *DuckDBPyConnection::ImportCache() {
 	return GetModuleState().GetImportCache();
 }
 
-
 bool DuckDBPyConnection::IsJupyterInstance() const {
 	return GetModuleState().environment == PythonEnvironmentType::JUPYTER;
 }
@@ -2222,19 +2221,21 @@ void DuckDBPyConnection::Exit(DuckDBPyConnection &self, const py::object &exc_ty
 }
 
 void DuckDBPyConnection::Cleanup() {
-	if (Py_IsFinalizing()) {
-		return; // Skip cleanup during Python shutdown
+	try {
+		GetModuleState().ClearDefaultConnection();
+		GetModuleState().ClearImportCache();
+	} catch (...) { // NOLINT
+		            // TODO: Can we detect shutdown? Py_IsFinalizing might be appropriate, although renamed from
+		            // _Py_IsFinalizing
 	}
-	GetModuleState().ClearDefaultConnection();
-	GetModuleState().ClearImportCache();
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyConnection::GetDefaultConnection() {
-	return GetModuleState().default_connection.Get();
+	return GetModuleState().GetDefaultConnection();
 }
 
 void DuckDBPyConnection::ClearDefaultConnection() {
-	GetModuleState().default_connection.Set(nullptr);
+	GetModuleState().ClearDefaultConnection();
 }
 
 void DuckDBPyConnection::ClearImportCache() {

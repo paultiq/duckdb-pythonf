@@ -8,20 +8,29 @@
 
 #include "duckdb_python/module_state.hpp"
 #include <stdexcept>
+#include <chrono>
+#include <thread>
+
+// Enable debug prints for performance analysis
+#define DEBUG_MODULE_STATE 1
 
 namespace duckdb {
 
+// Forward declaration from pyconnection.cpp
+void InstantiateNewInstance(DuckDB &db);
+
 // Static member initialization - required for all static class members in C++
-DuckDBPyModuleState* DuckDBPyModuleState::g_module_state = nullptr;
+DuckDBPyModuleState *DuckDBPyModuleState::g_module_state = nullptr;
 
 // Module state constructor
 DuckDBPyModuleState::DuckDBPyModuleState() {
 	// Create caches
 	instance_cache = make_uniq<DBInstanceCache>();
-	import_cache = make_shared_ptr<PythonImportCache>();
+	// import_cache: direct object due to frequent calls
 
 #ifdef Py_GIL_DISABLED
 	// Initialize lock object for critical sections
+	// TODO: Consider moving to finer-grained locks
 	lock_object = py::none();
 #endif
 
@@ -40,7 +49,7 @@ DuckDBPyModuleState::DuckDBPyModuleState() {
 
 		if (ModuleIsLoaded<IpythonCacheItem>()) {
 			// Check to see if we are in a Jupyter Notebook
-			auto get_ipython = import_cache->IPython.get_ipython();
+			auto get_ipython = import_cache.IPython.get_ipython();
 			if (get_ipython.ptr() != nullptr) {
 				auto ipython = get_ipython();
 				if (py::hasattr(ipython, "config")) {
@@ -52,11 +61,9 @@ DuckDBPyModuleState::DuckDBPyModuleState() {
 			}
 		}
 	}
-
 }
 
-
-DuckDBPyModuleState& DuckDBPyModuleState::GetGlobalModuleState() {
+DuckDBPyModuleState &DuckDBPyModuleState::GetGlobalModuleState() {
 	// TODO: Externalize this static cache when adding multi-interpreter support
 	// For now, single interpreter assumption allows simple static caching
 	if (!g_module_state) {
@@ -66,11 +73,16 @@ DuckDBPyModuleState& DuckDBPyModuleState::GetGlobalModuleState() {
 }
 
 void DuckDBPyModuleState::SetGlobalModuleState(DuckDBPyModuleState *state) {
-	printf("DEBUG: SetGlobalModuleState() called - initializing static cache\n");
+#if DEBUG_MODULE_STATE
+	printf("DEBUG: SetGlobalModuleState() called - initializing static cache (built: %s %s)\n", __DATE__, __TIME__);
+#endif
 	g_module_state = state;
 }
 
 DuckDBPyModuleState &GetModuleState() {
+#if DEBUG_MODULE_STATE
+	printf("DEBUG: GetModuleState() called\n");
+#endif
 	return DuckDBPyModuleState::GetGlobalModuleState();
 }
 
@@ -79,28 +91,36 @@ void SetModuleState(DuckDBPyModuleState *state) {
 }
 
 shared_ptr<DuckDBPyConnection> DuckDBPyModuleState::GetDefaultConnection() {
-	return default_connection.Get();
+	lock_guard<mutex> guard(default_connection_mutex);
+	// Reproduce exact logic from original DefaultConnectionHolder::Get()
+	if (!default_connection_ptr || default_connection_ptr->con.ConnectionIsClosed()) {
+		py::dict config_dict;
+		default_connection_ptr = DuckDBPyConnection::Connect(py::str(":memory:"), false, config_dict);
+	}
+	return default_connection_ptr;
 }
 
 void DuckDBPyModuleState::SetDefaultConnection(shared_ptr<DuckDBPyConnection> connection) {
-	default_connection.Set(std::move(connection));
+	lock_guard<mutex> guard(default_connection_mutex);
+	default_connection_ptr = std::move(connection);
 }
 
 void DuckDBPyModuleState::ClearDefaultConnection() {
-	default_connection.Set(nullptr);
+	lock_guard<mutex> guard(default_connection_mutex);
+	default_connection_ptr = nullptr;
 }
 
-PythonImportCache* DuckDBPyModuleState::GetImportCache() {
-	return import_cache.get();
+PythonImportCache *DuckDBPyModuleState::GetImportCache() {
+	return &import_cache;
 }
 
 void DuckDBPyModuleState::ClearImportCache() {
-	import_cache.reset();
+	// Direct object will be cleaned up automatically by destructor
+	// TODO: If explicit clearing is needed, add Clear() method to PythonImportCache
 }
 
-DBInstanceCache* DuckDBPyModuleState::GetInstanceCache() {
+DBInstanceCache *DuckDBPyModuleState::GetInstanceCache() {
 	return instance_cache.get();
 }
-
 
 } // namespace duckdb
