@@ -60,13 +60,21 @@ jobs:
           CIBW_TEST_SKIP: '*'
           # Platform-specific ccache installation commands
           CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" CCACHE_DIR={project}/wheelhouse/ccache CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
-          CIBW_AFTER_BUILD: ccache -s
+          CIBW_AFTER_BUILD: ccache -s && ls -la {project}/wheelhouse/ccache
 
       - name: Upload test requirements
         uses: actions/upload-artifact@v4
         with:
           name: test-requirements-${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           path: test-requirements.txt
+
+      - name: Show ccache directory contents
+        shell: bash
+        run: |
+          echo "Ccache directory contents:"
+          ls -la ./wheelhouse/ccache/ || echo "No ccache directory found"
+          echo "Ccache directory size:"
+          du -sh ./wheelhouse/ccache/ || echo "No ccache directory found"
 
       - name: Upload wheel
         uses: actions/upload-artifact@v4
