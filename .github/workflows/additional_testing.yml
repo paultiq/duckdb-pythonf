@@ -34,6 +34,8 @@ jobs:
       - name: Export test requirements
         shell: bash
         run: |
+          ls -l 
+          ls -l external
           uv export --only-group test --no-emit-project --output-file test-requirements.txt --quiet
       - name: Configure Cache Env
         uses: actions/github-script@v7
@@ -49,9 +51,10 @@ jobs:
           CIBW_TEST_SKIP: '*'
           # Platform-specific ccache installation commands
           CIBW_BEFORE_TEST: >
-            sccache --show-stats && 
+            sccache --show-stats &&
             uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
             uv pip install -r pylock.toml
+          CIBW_TEST_COMMAND: sccache --show-stats
           CIBW_BEFORE_BUILD_LINUX: >
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
@@ -64,7 +67,7 @@ jobs:
           SCCACHE_GHA_ENABLED: "on"
           SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ env.PYTHON_VERSION }}-${{ env.OS }}
           ACTIONS_CACHE_SERVICE_V2: "1"  
-          CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
+          CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER=sccache CMAKE_CXX_COMPILER_LAUNCHER=sccache CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
           CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER PYTHON_GIL
       - name: Upload test requirements
         uses: actions/upload-artifact@v4
@@ -130,7 +133,7 @@ jobs:
         shell: bash
         run: |
           uv pip install wheelhouse/*.whl --no-deps --force-reinstall
-          uv sync --no-install-project                    
+          uv sync --no-install-project --no-build-isolation               
           rm -f pyproject.toml  # Remove project metadata to prevent build attempts
 
       - name: Run ${{ matrix.pytest_config.name }} tests
