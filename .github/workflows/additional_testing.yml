@@ -67,16 +67,11 @@ jobs:
             CMAKE_C_FLAGS="-O1 -DNDEBUG"
             CFLAGS="-Wno-attributes"
             CXXFLAGS="-Wno-attributes"
-            CORE_EXTENSIONS=""
+            BUILD_EXTENSIONS=""
             DISABLE_BUILTIN_EXTENSIONS=ON
-            BUILD_PARQUET_EXTENSION=OFF
-            BUILD_TPCH_EXTENSION=OFF
-            BUILD_FTS_EXTENSION=OFF
-            BUILD_HTTPFS_EXTENSION=OFF
-            BUILD_VISUALIZER_EXTENSION=OFF
-            BUILD_TPCDS_EXTENSION=OFF
-            BUILD_JSON_EXTENSION=OFF
-            BUILD_ICU_EXTENSION=OFF
+            BUILD_SHELL=OFF
+            BUILD_UNITTESTS=OFF
+            BUILD_BENCHMARKS=OFF
           CIBW_BEFORE_BUILD: >
             yum install -y ccache &&
             export PATH="/usr/lib64/ccache:$PATH" &&
