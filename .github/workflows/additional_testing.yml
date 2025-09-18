@@ -3,19 +3,19 @@ on:
   push:
 
 env:
-  OS_TO_USE: ubuntu-24.04
-  ARCH_TO_USE: x86_64
-  CIBW_SYSTEM_TO_USE: manylinux
-  PYTHON_VERSION_TO_USE: cp313
-  TESTSUITE_TO_USE: fast
-  ITERATIONS_TO_USE: 3
+  OS: ubuntu-24.04
+  ARCH: x86_64
+  CIBW_SYSTEM: manylinux
+  PYTHON_VERSION: cp313
+  TESTSUITE: fast
+  ITERATIONS: 3
 
 
 
 jobs:
   build:
-    name: "Build wheel: ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}"
-    runs-on: ${{ env.OS_TO_USE }}
+    name: "Build wheel: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}"
+    runs-on: ${{ env.OS }}
 
     steps:
       - name: Checkout DuckDB Python
@@ -28,14 +28,14 @@ jobs:
         with:
           version: "0.8.16"
           enable-cache: false
-          cache-suffix: -${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
-          python-version: ${{ env.PYTHON_VERSION_TO_USE }}
+          cache-suffix: -${{ env.PYTHON_VERSION }}-${{ env.OS }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Build wheel
         uses: pypa/cibuildwheel@v3.1
         env:
-          CIBW_ARCHS: ${{ env.ARCH_TO_USE == 'amd64' && 'AMD64' || env.ARCH_TO_USE }}
-          CIBW_BUILD: ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}
+          CIBW_ARCHS: ${{ env.ARCH }}
+          CIBW_BUILD: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           CIBW_TEST_SKIP: '*'
           # Platform-specific ccache installation commands
           CIBW_BEFORE_BUILD_LINUX: ""
@@ -45,12 +45,12 @@ jobs:
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}
+          name: wheel-${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           path: wheelhouse/
 
   test:
-    name: 'Test: ${{ matrix.pytest_config.name }} - ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}'
-    runs-on: ${{ env.OS_TO_USE }}
+    name: 'Test: ${{ matrix.pytest_config.name }} - ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}'
+    runs-on: ${{ env.OS }}
     needs: build
     strategy:
       fail-fast: false
@@ -78,13 +78,13 @@ jobs:
         with:
           version: "0.8.16"
           enable-cache: false
-          cache-suffix: -${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
-          python-version: ${{ env.PYTHON_VERSION_TO_USE }}
+          cache-suffix: -${{ env.PYTHON_VERSION }}-${{ env.OS }}
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:
-          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}
+          name: wheel-${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           path: wheelhouse/
 
       - name: Install dependencies
