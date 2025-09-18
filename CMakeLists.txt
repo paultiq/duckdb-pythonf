@@ -64,18 +64,6 @@ add_subdirectory(src/duckdb_py)
 
 pybind11_add_module(_duckdb
         $<TARGET_OBJECTS:python_src>
-        $<TARGET_OBJECTS:python_arrow>
-        $<TARGET_OBJECTS:python_common>
-        $<TARGET_OBJECTS:python_functional>
-        $<TARGET_OBJECTS:python_jupyter>
-        $<TARGET_OBJECTS:python_native>
-        $<TARGET_OBJECTS:python_numpy>
-        $<TARGET_OBJECTS:python_pandas>
-        $<TARGET_OBJECTS:python_pybind11>
-        $<TARGET_OBJECTS:python_connection>
-        $<TARGET_OBJECTS:python_expression>
-        $<TARGET_OBJECTS:python_relation>
-        $<TARGET_OBJECTS:python_type>
 )
 # add _duckdb_dependencies
 target_link_libraries(_duckdb PRIVATE _duckdb_dependencies)
