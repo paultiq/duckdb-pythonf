@@ -129,9 +129,9 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
+          uv pip install wheelhouse/*.whl --no-deps --force-reinstall
           uv sync --no-install-project                    
           rm -f pyproject.toml  # Remove project metadata to prevent build attempts
-          uv pip install wheelhouse/*.whl --no-deps --force-reinstall
 
       - name: Run ${{ matrix.pytest_config.name }} tests
         shell: bash
