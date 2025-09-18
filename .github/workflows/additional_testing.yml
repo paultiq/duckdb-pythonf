@@ -50,7 +50,7 @@ jobs:
         shell: bash
         run: mkdir -p ./wheelhouse/ccache
 
-      - name: Build wheel
+      - name: Minimal build with ccache
         uses: pypa/cibuildwheel@v3.1
         with:
           output-dir: wheelhouse
@@ -58,9 +58,22 @@ jobs:
           CIBW_ARCHS: ${{ env.ARCH }}
           CIBW_BUILD: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           CIBW_TEST_SKIP: '*'
-          # Platform-specific ccache installation commands
-          CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" CCACHE_DIR={project}/wheelhouse/ccache CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
-          CIBW_AFTER_BUILD: ccache -s && ls -la {project}/wheelhouse/ccache && echo "=== CCACHE STATS ===" && ccache -s && echo "=== END CCACHE STATS ==="
+          # Minimal build configuration
+          CIBW_ENVIRONMENT: >
+            CCACHE_DIR={project}/wheelhouse/ccache
+            CMAKE_BUILD_TYPE=MinSizeRel
+            CMAKE_BUILD_PARALLEL_LEVEL=1
+            CMAKE_CXX_FLAGS="-O1 -DNDEBUG"
+            CMAKE_C_FLAGS="-O1 -DNDEBUG"
+            CFLAGS="-Wno-attributes"
+            CXXFLAGS="-Wno-attributes"
+          CIBW_BEFORE_BUILD: >
+            yum install -y ccache &&
+            export PATH="/usr/lib64/ccache:$PATH" &&
+            ccache --max-size=1G
+          CIBW_AFTER_BUILD: >
+            ls -la {project}/wheelhouse/ccache &&
+            ccache -s &&
 
       - name: Upload test requirements
         uses: actions/upload-artifact@v4
