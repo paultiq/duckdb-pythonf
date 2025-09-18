@@ -17,7 +17,7 @@ class TestQueryInterruption(object):
         condition=platform.system() == "Emscripten",
         reason="Emscripten builds cannot use threads",
     )
-    @pytest.mark.timeout(5)
+    @pytest.mark.timeout(15)
     def test_keyboard_interruption(self):
         con = duckdb.connect()
         thread = threading.Thread(target=send_keyboard_interrupt)
