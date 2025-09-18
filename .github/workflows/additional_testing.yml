@@ -1,80 +1,28 @@
 name: Stress Tests
 on:
   push:
-  workflow_dispatch:
-    inputs:
-      os:
-        description: Operating System
-        required: true
-        type: choice
-        default: ubuntu-24.04
-        options:
-          - windows-2025
-          - ubuntu-24.04
-          - ubuntu-24.04-arm
-          - macos-15
-          - macos-13
-      python_version:
-        description: Python Version
-        required: true
-        type: choice
-        default: cp314
-        options:
-          - cp39
-          - cp310
-          - cp311
-          - cp312
-          - cp313
-          - cp314
-          - cp314t
-      testsuite:
-        type: choice
-        description: Testsuite to run (fast, all)
-        required: true
-        default: fast
-        options:
-          - fast
-          - all
-      duckdb-python-sha:
-        type: string
-        description: The commit or ref to build against (defaults to latest commit of current ref)
-        required: false
-      duckdb-sha:
-        type: string
-        description: Override the DuckDB submodule commit or ref to build against
-        required: false
-      test_iterations:
-        type: number
-        description: Number of times to run each test phase
-        required: false
-        default: 3
 
 env:
-  OS_TO_USE: ${{ inputs.os || 'ubuntu-24.04' }}
-  PYTHON_VERSION_TO_USE: ${{ inputs.python_version || 'cp314' }}
-  TESTSUITE_TO_USE: ${{ inputs.testsuite || 'fast' }}
-  ITERATIONS_TO_USE: ${{ inputs.test_iterations || '3' }}
-  
+  OS_TO_USE: ubuntu-24.04
+  ARCH_TO_USE: x86_64
+  CIBW_SYSTEM_TO_USE: manylinux
+  PYTHON_VERSION_TO_USE: cp313
+  TESTSUITE_TO_USE: fast
+  ITERATIONS_TO_USE: 3
+
+
+
 jobs:
   build:
-    name: "Build wheel: ${{ inputs.python_version || 'cp314' }}-${{ inputs.os || 'ubuntu-24.04' }}"
-    runs-on: ${{ inputs.os || 'ubuntu-24.04' }}
+    name: "Build wheel: ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}"
+    runs-on: ${{ env.OS_TO_USE }}
 
     steps:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0
           submodules: true
-
-      - name: Checkout DuckDB
-        shell: bash
-        if: ${{ inputs.duckdb-sha }}
-        run: |
-          cd external/duckdb
-          git fetch origin
-          git checkout ${{ inputs.duckdb-sha }}
 
       - uses: astral-sh/setup-uv@v6
         with:
@@ -86,22 +34,23 @@ jobs:
       - name: Build wheel
         uses: pypa/cibuildwheel@v3.1
         env:
-          CIBW_ARCHS: auto
-          CIBW_BUILD: ${{ env.PYTHON_VERSION_TO_USE }}-*
+          CIBW_ARCHS: ${{ env.ARCH_TO_USE == 'amd64' && 'AMD64' || env.ARCH_TO_USE }}
+          CIBW_BUILD: ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}
           CIBW_TEST_SKIP: '*'
+          # Platform-specific ccache installation commands
           CIBW_BEFORE_BUILD_LINUX: ""
           CIBW_BEFORE_BUILD_MACOS: ""
           CIBW_BEFORE_BUILD_WINDOWS: "" 
-          
+
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
+          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}
           path: wheelhouse/
 
   test:
-    name: 'Test: ${{ matrix.pytest_config.name }} - ${{ inputs.python_version }}-${{ inputs.os }}'
-    runs-on: ${{ inputs.os }}
+    name: 'Test: ${{ matrix.pytest_config.name }} - ${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}'
+    runs-on: ${{ env.OS_TO_USE }}
     needs: build
     strategy:
       fail-fast: false
@@ -109,12 +58,12 @@ jobs:
         pytest_config:
           - name: "Random Order"  # randomization is automatic due to pytest-randomly
             args: ""
-            iterations: ${{ inputs.test_iterations || 3 }}
+            iterations: 3
           - name: "Multiprocess"  # uses pytest-xdist
             args: "-n auto"
-            iterations: ${{ inputs.test_iterations || 3 }}
+            iterations: 3
           - name: "Threaded"  # uses pytest-run-parallel
-            # TODO: Update to use threading specific tests or explicitly mark unsafe tests. test_module was chosen as an example. 
+            # TODO: Update to use threading specific tests or explicitly mark unsafe tests. test_module was chosen as an example.
             args: "--parallel-threads=4 --iterations=8 tests/fast/test_module.py --ignore"
             iterations: 1
 
@@ -122,7 +71,6 @@ jobs:
       - name: Checkout DuckDB Python
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0
           submodules: true
 
@@ -136,19 +84,20 @@ jobs:
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:
-          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.OS_TO_USE }}
+          name: wheel-${{ env.PYTHON_VERSION_TO_USE }}-${{ env.CIBW_SYSTEM_TO_USE }}_${{ env.ARCH_TO_USE }}
           path: wheelhouse/
 
       - name: Install dependencies
         shell: bash
         run: |
-          uv sync --no-install-project
+          uv export --only-group test --no-emit-project --output-file pylock.toml
+          uv pip install -r pylock.toml
           uv pip install wheelhouse/*.whl
 
       - name: Run ${{ matrix.pytest_config.name }} tests
         shell: bash
         run: |
-          TEST_TARGET="${{ inputs.testsuite == 'fast' && 'tests/fast' || 'tests' }}"
+          TEST_TARGET="tests/fast"
           ITERATIONS="${{ matrix.pytest_config.iterations }}"
           PYTEST_ARGS="${{ matrix.pytest_config.args }}"
 
@@ -157,7 +106,7 @@ jobs:
             echo ""
             echo "${{ matrix.pytest_config.name }} Run $i/$ITERATIONS:"
             echo "--------"
-            uv run --no-build pytest $PYTEST_ARGS "$TEST_TARGET" --durations=5
+            uv run pytest $PYTEST_ARGS "$TEST_TARGET" --durations=5
             if [ $? -ne 0 ]; then
               echo "${{ matrix.pytest_config.name }} Run $i failed!"
             else
