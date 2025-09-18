@@ -55,9 +55,9 @@ env:
   TESTSUITE_TO_USE: ${{ inputs.testsuite || 'fast' }}
   ITERATIONS_TO_USE: ${{ inputs.test_iterations || '3' }}
   # Platform-specific ccache installation commands
-  CIBW_BEFORE_BUILD_LINUX: "yum install -y ccache"
-  CIBW_BEFORE_BUILD_MACOS: "brew install ccache"
-  CIBW_BEFORE_BUILD_WINDOWS: "choco install ccache" 
+  CIBW_BEFORE_BUILD_LINUX: ""
+  CIBW_BEFORE_BUILD_MACOS: ""
+  CIBW_BEFORE_BUILD_WINDOWS: "" 
 
 
 jobs:
