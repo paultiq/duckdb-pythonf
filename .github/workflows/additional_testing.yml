@@ -36,7 +36,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ./wheelhouse/ccache
-          key: ccache-${{ env.PYTHON_VERSION }}-${{ env.OS }}-${{ hashFiles('**/*.cpp', '**/*.c', '**/*.h', '**/*.hpp') }}
+          key: ccache-${{ env.PYTHON_VERSION }}-${{ env.OS }}
           restore-keys: |
             ccache-${{ env.PYTHON_VERSION }}-${{ env.OS }}-
 
@@ -59,7 +59,7 @@ jobs:
           CIBW_BUILD: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           CIBW_TEST_SKIP: '*'
           # Platform-specific ccache installation commands
-          CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache CCACHE_DIR={project}/wheelhouse/ccache CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
+          CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER="" CCACHE_DIR={project}/wheelhouse/ccache CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
           CIBW_AFTER_BUILD: ccache -s
 
       - name: Upload test requirements
