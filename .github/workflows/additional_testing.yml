@@ -147,8 +147,9 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          uv export --only-group test --no-emit-project --output-file pylock.toml
-          uv pip install -r pylock.toml
+          mkdir workdir
+          cd workdir
+          uv sync --no-install-project
           uv pip install wheelhouse/*.whl
 
       - name: Run ${{ matrix.pytest_config.name }} tests
@@ -163,7 +164,7 @@ jobs:
             echo ""
             echo "${{ matrix.pytest_config.name }} Run $i/$ITERATIONS:"
             echo "--------"
-            uv run pytest $PYTEST_ARGS "$TEST_TARGET" --durations=5
+            uv run --no-build pytest $PYTEST_ARGS "$TEST_TARGET" --durations=5
             if [ $? -ne 0 ]; then
               echo "${{ matrix.pytest_config.name }} Run $i failed!"
             else
