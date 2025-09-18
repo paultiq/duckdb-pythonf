@@ -90,7 +90,8 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          uv export --only-group test --no-emit-project --output-file pylock.toml
+          uv venv
+          uv export --only-group test --no-emit-project --output-file pylock.toml --quiet
           uv pip install -r pylock.toml
           uv pip install wheelhouse/*.whl
 
