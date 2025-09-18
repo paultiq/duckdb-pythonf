@@ -24,6 +24,7 @@ jobs:
           fetch-depth: 0
           submodules: true
 
+
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.8.16"
@@ -31,44 +32,36 @@ jobs:
           cache-suffix: -${{ env.PYTHON_VERSION }}-${{ env.OS }}
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Cache ccache objects
+        uses: actions/cache@v4
+        with:
+          path: ./wheelhouse/ccache
+          key: ccache-${{ env.PYTHON_VERSION }}-${{ env.OS }}-${{ hashFiles('**/*.cpp', '**/*.c', '**/*.h', '**/*.hpp') }}
+          restore-keys: |
+            ccache-${{ env.PYTHON_VERSION }}-${{ env.OS }}-
+
+
       - name: Export test requirements
         shell: bash
         run: |
-          ls -l 
-          ls -l external
           uv export --only-group test --no-emit-project --output-file test-requirements.txt --quiet
-      - name: Configure Cache Env
-        uses: actions/github-script@v7
-        with:
-          script: |
-            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+      - name: Prepare ccache directory
+        shell: bash
+        run: mkdir -p ./wheelhouse/ccache
+
       - name: Build wheel
         uses: pypa/cibuildwheel@v3.1
+        with:
+          output-dir: wheelhouse
         env:
           CIBW_ARCHS: ${{ env.ARCH }}
           CIBW_BUILD: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           CIBW_TEST_SKIP: '*'
           # Platform-specific ccache installation commands
-          CIBW_BEFORE_TEST: >
-            sccache --show-stats &&
-            uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
-            uv pip install -r pylock.toml
-          CIBW_TEST_COMMAND: sccache --show-stats
-          CIBW_BEFORE_BUILD_LINUX: >
-            if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
-            curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
-            cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
-            sccache --show-stats
-          CIBW_BEFORE_BUILD_MACOS: brew install sccache
-          CIBW_BEFORE_BUILD_WINDOWS: >
-            del "C:\Strawberry\c\bin\ccache.exe" &&
-            choco install sccache
-          SCCACHE_GHA_ENABLED: "on"
-          SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ env.PYTHON_VERSION }}-${{ env.OS }}
-          ACTIONS_CACHE_SERVICE_V2: "1"  
-          CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER=sccache CMAKE_CXX_COMPILER_LAUNCHER=sccache CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
-          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER PYTHON_GIL
+          CIBW_ENVIRONMENT: CMAKE_C_COMPILER_LAUNCHER=ccache CMAKE_CXX_COMPILER_LAUNCHER=ccache CCACHE_DIR={project}/wheelhouse/ccache CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
+          CIBW_AFTER_BUILD: ccache -s
+
       - name: Upload test requirements
         uses: actions/upload-artifact@v4
         with:
