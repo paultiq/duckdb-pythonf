@@ -31,6 +31,11 @@ jobs:
           cache-suffix: -${{ env.PYTHON_VERSION }}-${{ env.OS }}
           python-version: ${{ env.PYTHON_VERSION }}
 
+      - name: Export test requirements
+        shell: bash
+        run: |
+          uv export --only-group test --no-emit-project --output-file test-requirements.txt --quiet
+
       - name: Build wheel
         uses: pypa/cibuildwheel@v3.1
         env:
@@ -40,7 +45,13 @@ jobs:
           # Platform-specific ccache installation commands
           CIBW_BEFORE_BUILD_LINUX: ""
           CIBW_BEFORE_BUILD_MACOS: ""
-          CIBW_BEFORE_BUILD_WINDOWS: "" 
+          CIBW_BEFORE_BUILD_WINDOWS: ""
+
+      - name: Upload test requirements
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-requirements-${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
+          path: test-requirements.txt
 
       - name: Upload wheel
         uses: actions/upload-artifact@v4
@@ -71,9 +82,7 @@ jobs:
       - name: Checkout test files only
         uses: actions/checkout@v4
         with:
-          sparse-checkout: |
-            tests
-            pyproject.toml
+          sparse-checkout: tests
           sparse-checkout-cone-mode: false
 
       - uses: astral-sh/setup-uv@v6
@@ -89,11 +98,18 @@ jobs:
           name: wheel-${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           path: wheelhouse/
 
+      - name: Download test requirements
+        uses: actions/download-artifact@v4
+        with:
+          name: test-requirements-${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
+          path: .
+
       - name: Install dependencies
         shell: bash
         run: |
           uv venv
-          uv pip install pytest pytest-xdist pytest-randomly pytest-run-parallel
+          rm -f pyproject.toml  # Remove any project metadata to prevent build attempts
+          uv pip install -r test-requirements.txt
           uv pip install wheelhouse/*.whl --no-deps --force-reinstall
 
       - name: Run ${{ matrix.pytest_config.name }} tests
