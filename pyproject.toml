@@ -133,7 +133,6 @@ cmake.define.DISABLE_BUILTIN_EXTENSIONS = "ON"
 cmake.define.BUILD_SHELL = "OFF"
 cmake.define.BUILD_UNITTESTS = "OFF"
 cmake.define.BUILD_BENCHMARKS = "OFF"
-cmake.define.DISABLE_UNITY = "ON"
 
 [tool.scikit-build.sdist]
 include = [
