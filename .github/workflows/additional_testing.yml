@@ -54,12 +54,7 @@ env:
   PYTHON_VERSION_TO_USE: ${{ inputs.python_version || 'cp314' }}
   TESTSUITE_TO_USE: ${{ inputs.testsuite || 'fast' }}
   ITERATIONS_TO_USE: ${{ inputs.test_iterations || '3' }}
-  # Override the ccache installs - unnecessary
-  CIBW_BEFORE_BUILD_LINUX: ""
-  CIBW_BEFORE_BUILD_MACOS: ""
-  CIBW_BEFORE_BUILD_WINDOWS: "" 
-
-
+  
 jobs:
   build:
     name: "Build wheel: ${{ inputs.python_version || 'cp314' }}-${{ inputs.os || 'ubuntu-24.04' }}"
@@ -94,10 +89,10 @@ jobs:
           CIBW_ARCHS: auto
           CIBW_BUILD: ${{ env.PYTHON_VERSION_TO_USE }}-*
           CIBW_TEST_SKIP: '*'
-          CIBW_BEFORE_BUILD_LINUX: ${{ env.CIBW_BEFORE_BUILD_LINUX }}
-          CIBW_BEFORE_BUILD_MACOS: ${{ env.CIBW_BEFORE_BUILD_MACOS }}
-          CIBW_BEFORE_BUILD_WINDOWS: ${{ env.CIBW_BEFORE_BUILD_WINDOWS }}
-
+          CIBW_BEFORE_BUILD_LINUX: ""
+          CIBW_BEFORE_BUILD_MACOS: ""
+          CIBW_BEFORE_BUILD_WINDOWS: "" 
+          
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
@@ -147,8 +142,6 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          mkdir workdir
-          cd workdir
           uv sync --no-install-project
           uv pip install wheelhouse/*.whl
 
