@@ -123,6 +123,18 @@ if.env.COVERAGE = false
 inherit.cmake.define = "append"
 cmake.define.DISABLE_UNITY = "1"
 
+# Override: CI minimal build - disable all extensions
+[[tool.scikit-build.overrides]]
+if.env.CI_MINIMAL_BUILD = true
+inherit.cmake.define = "replace"
+cmake.define.CORE_EXTENSIONS = ""
+cmake.define.BUILD_EXTENSIONS = ""
+cmake.define.DISABLE_BUILTIN_EXTENSIONS = "ON"
+cmake.define.BUILD_SHELL = "OFF"
+cmake.define.BUILD_UNITTESTS = "OFF"
+cmake.define.BUILD_BENCHMARKS = "OFF"
+cmake.define.DISABLE_UNITY = "ON"
+
 [tool.scikit-build.sdist]
 include = [
     "README.md",

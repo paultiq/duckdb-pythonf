@@ -58,20 +58,16 @@ jobs:
           CIBW_ARCHS: ${{ env.ARCH }}
           CIBW_BUILD: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           CIBW_TEST_SKIP: '*'
-          # Minimal build configuration - disable most DuckDB features
+          # Minimal build configuration - use pyproject.toml override
           CIBW_ENVIRONMENT: >
             CCACHE_DIR={project}/wheelhouse/ccache
+            CI_MINIMAL_BUILD=true
             CMAKE_BUILD_TYPE=MinSizeRel
             CMAKE_BUILD_PARALLEL_LEVEL=1
             CMAKE_CXX_FLAGS="-O1 -DNDEBUG"
             CMAKE_C_FLAGS="-O1 -DNDEBUG"
             CFLAGS="-Wno-attributes"
             CXXFLAGS="-Wno-attributes"
-            BUILD_EXTENSIONS=""
-            DISABLE_BUILTIN_EXTENSIONS=ON
-            BUILD_SHELL=OFF
-            BUILD_UNITTESTS=OFF
-            BUILD_BENCHMARKS=OFF
           CIBW_BEFORE_BUILD: >
             yum install -y ccache &&
             export PATH="/usr/lib64/ccache:$PATH" &&
