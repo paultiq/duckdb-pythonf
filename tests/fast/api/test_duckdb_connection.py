@@ -24,23 +24,23 @@ def tmp_database(tmp_path_factory):
 # wrapped by the 'duckdb' module, to execute with the 'default_connection'
 class TestDuckDBConnection(object):
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_append(self, pandas):
-        duckdb.execute("Create table integers (i integer)")
+    def test_append(self, pandas, default_con):
+        default_con.execute("Create table integers (i integer)")
         df_in = pandas.DataFrame(
             {
                 'numbers': [1, 2, 3, 4, 5],
             }
         )
-        duckdb.append('integers', df_in)
-        assert duckdb.execute('select count(*) from integers').fetchone()[0] == 5
+        default_con.append('integers', df_in)
+        assert default_con.execute('select count(*) from integers').fetchone()[0] == 5
         # cleanup
-        duckdb.execute("drop table integers")
+        default_con.execute("drop table integers")
 
-    def test_default_connection_from_connect(self):
-        duckdb.sql('create or replace table connect_default_connect (i integer)')
+    def test_default_connection_from_connect(self, default_con):
+        default_con.sql('create or replace table connect_default_connect (i integer)')
         con = duckdb.connect(':default:')
         con.sql('select i from connect_default_connect')
-        duckdb.sql('drop table connect_default_connect')
+        default_con.sql('drop table connect_default_connect')
         with pytest.raises(duckdb.Error):
             con.sql('select i from connect_default_connect')
 
@@ -62,26 +62,26 @@ class TestDuckDBConnection(object):
         res = duckdb.table("tbl_1")
         duckdb.execute("drop table tbl_1")
 
-    def test_begin_rollback(self):
-        duckdb.begin()
-        duckdb.execute("create table tbl_1rb as select 1")
-        duckdb.rollback()
+    def test_begin_rollback(self, default_con):
+        default_con.begin()
+        default_con.execute("create table tbl_1rb as select 1")
+        default_con.rollback()
         with pytest.raises(duckdb.CatalogException):
             # Table does not exist
-            res = duckdb.table("tbl_1rb")
+            res = default_con.table("tbl_1rb")
 
-    def test_cursor(self):
-        duckdb.execute("create table tbl_3 as select 3")
+    def test_cursor(self, default_con):
+        default_con.execute("create table tbl_3 as select 3")
         duckdb_cursor = duckdb.cursor()
         res = duckdb_cursor.table("tbl_3").fetchall()
         assert res == [(3,)]
         duckdb_cursor.execute("drop table tbl_3")
         with pytest.raises(duckdb.CatalogException):
             # 'tbl' no longer exists
-            duckdb.table("tbl_3")
+            default_con.table("tbl_3")
 
-    def test_cursor_lifetime(self):
-        con = duckdb.connect()
+    def test_cursor_lifetime(self, default_con):
+        con = default_con
 
         def use_cursors():
             cursors = []
@@ -286,8 +286,8 @@ class TestDuckDBConnection(object):
     def test_register(self):
         assert None != duckdb.register
 
-    def test_register_relation(self):
-        con = duckdb.connect()
+    def test_register_relation(self, default_con):
+        con = default_con
         rel = con.sql('select [5,4,3]')
         con.register("relation_rr", rel)
 
@@ -314,10 +314,10 @@ class TestDuckDBConnection(object):
         assert duckdb_cursor.execute("select * from vw").fetchone() == (0,)
 
     @pytest.mark.parametrize('pandas', [NumpyPandas(), ArrowPandas()])
-    def test_relation_out_of_scope(self, pandas):
+    def test_relation_out_of_scope(self, pandas, default_con):
         def temporary_scope():
             # Create a connection, we will return this
-            con = duckdb.connect()
+            con = default_con
             # Create a dataframe
             df = pandas.DataFrame({'a': [1, 2, 3]})
             # The dataframe has to be registered as well
@@ -356,16 +356,15 @@ class TestDuckDBConnection(object):
     def test_interrupt(self):
         assert None != duckdb.interrupt
 
-    def test_wrap_shadowing(self):
+    def test_wrap_shadowing(self, default_con):
         pd = NumpyPandas()
-        import duckdb
 
         df = pd.DataFrame({"a": [1, 2, 3]})
-        res = duckdb.sql("from df").fetchall()
+        res = default_con.sql("from df").fetchall()
         assert res == [(1,), (2,), (3,)]
 
-    def test_wrap_coverage(self):
-        con = duckdb.default_connection
+    def test_wrap_coverage(self, default_con):
+        con = default_con
 
         # Skip all of the initial __xxxx__ methods
         connection_methods = dir(con)
