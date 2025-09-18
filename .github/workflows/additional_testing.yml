@@ -35,7 +35,12 @@ jobs:
         shell: bash
         run: |
           uv export --only-group test --no-emit-project --output-file test-requirements.txt --quiet
-
+      - name: Configure Cache Env
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       - name: Build wheel
         uses: pypa/cibuildwheel@v3.1
         env:
@@ -43,6 +48,10 @@ jobs:
           CIBW_BUILD: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
           CIBW_TEST_SKIP: '*'
           # Platform-specific ccache installation commands
+          CIBW_BEFORE_TEST: >
+            sccache --show-stats && 
+            uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
+            uv pip install -r pylock.toml
           CIBW_BEFORE_BUILD_LINUX: >
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
