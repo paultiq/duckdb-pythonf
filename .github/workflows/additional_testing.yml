@@ -14,8 +14,8 @@ env:
 
 jobs:
   build:
-    name: "Build wheel: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}"
-    runs-on: ${{ env.OS }}
+    name: "Build wheel: cp313-manylinux_x86_64"
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout DuckDB Python
@@ -49,8 +49,8 @@ jobs:
           path: wheelhouse/
 
   test:
-    name: 'Test: ${{ matrix.pytest_config.name }} - ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}'
-    runs-on: ${{ env.OS }}
+    name: 'Test: ${{ matrix.pytest_config.name }} - cp313-manylinux_x86_64'
+    runs-on: ubuntu-24.04
     needs: build
     strategy:
       fail-fast: false
