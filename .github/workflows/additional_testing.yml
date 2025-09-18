@@ -101,7 +101,9 @@ jobs:
       - name: Checkout test files only
         uses: actions/checkout@v4
         with:
-          sparse-checkout: tests
+          sparse-checkout: |
+            tests
+            pyproject.toml
           sparse-checkout-cone-mode: false
 
       - uses: astral-sh/setup-uv@v6
