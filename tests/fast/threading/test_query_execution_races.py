@@ -100,35 +100,31 @@ def test_concurrent_pending_query_execution():
 
 def test_execute_many_race():
 
-    conn = duckdb.connect(':memory:')
-    try:
+    with duckdb.connect() as conn: 
         conn.execute("CREATE TABLE batch_data (id INTEGER, name VARCHAR)")
 
         num_threads = 10
+        iterations = 10
         tester = QueryRaceTester()
         tester.setup_barrier(num_threads)
 
         def execute_many_batch(thread_id):
-            batch_data = [(thread_id * 100 + i, f'name_{thread_id}_{i}') for i in range(10)]
+            with conn.cursor() as conn2: 
+                batch_data = [(thread_id * 100 + i, f'name_{thread_id}_{i}') for i in range(iterations)]
+                tester.barrier.wait()
+                conn2.executemany("INSERT INTO batch_data VALUES (?, ?)", batch_data)
+                result = conn2.execute(f"SELECT COUNT(*) FROM batch_data WHERE name LIKE 'name_{thread_id}_%'").fetchone()
 
-            tester.barrier.wait()
-
-            conn.executemany("INSERT INTO batch_data VALUES (?, ?)", batch_data)
-
-            result = conn.execute(f"SELECT COUNT(*) FROM batch_data WHERE name LIKE 'name_{thread_id}_%'").fetchone()
-            return {"success": True, "result": result, "description": f"ExecuteMany {thread_id}"}
+                return True
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
             futures = [executor.submit(execute_many_batch, i) for i in range(num_threads)]
             results = [future.result() for future in concurrent.futures.as_completed(futures)]
 
         total_rows = conn.execute("SELECT COUNT(*) FROM batch_data").fetchone()[0]
+        assert total_rows == num_threads * iterations
+        assert all(results)
 
-        successful = [r for r in results if r["success"]]
-        assert len(successful) == num_threads, f"Only {len(successful)}/{num_threads} operations succeeded"
-        assert total_rows == num_threads * 10, f"Expected {num_threads * 10} rows, got {total_rows}"
-    finally:
-        conn.close()
 
 
 def test_query_interruption_race():
@@ -145,18 +141,17 @@ def test_query_interruption_race():
                 if thread_id % 2 == 0:
                     # Fast query
                     result = conn2.execute("SELECT COUNT(*) FROM interrupt_test").fetchall()
-                    return {"success": True, "result": result, "description": f"Fast query {thread_id}"}
+                    return True
                 else:
                     # Potentially slower query
                     result = conn2.execute("SELECT i, i*i FROM interrupt_test WHERE i % 1000 = 0 ORDER BY i").fetchall()
-                    return {"success": True, "result": result, "description": f"Slow query {thread_id}"}
+                    return True
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
             futures = [executor.submit(run_interruptible_query, i) for i in range(num_threads)]
             results = [future.result() for future in concurrent.futures.as_completed(futures, timeout=30)]
 
-        successful = [r for r in results if r["success"]]
-        assert len(successful) >= num_threads * 0.7, f"Only {len(successful)}/{num_threads} queries succeeded"
+        assert all(results)
     finally:
         conn.close()
 

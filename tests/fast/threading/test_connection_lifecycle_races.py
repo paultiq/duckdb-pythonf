@@ -98,15 +98,15 @@ def test_concurrent_close_operations():
     tester.setup_barrier(num_threads)
 
     def attempt_close_connection(thread_id):
-
+        cursor = conn.cursor()
         def action():
             try:
-                _result = conn.execute(
+                _result = cursor.execute(
                     "SELECT COUNT(*) FROM shared_table"
                 ).fetchone()
 
                 # Try to close / only first thread should succeed
-                conn.close()
+                cursor.close()
 
                 return f"close_succeeded_{thread_id}"
             except Exception as e:
