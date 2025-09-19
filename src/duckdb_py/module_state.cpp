@@ -11,7 +11,6 @@
 #include <chrono>
 #include <thread>
 
-// Enable debug prints for performance analysis
 #define DEBUG_MODULE_STATE 0
 
 namespace duckdb {
@@ -22,11 +21,8 @@ void InstantiateNewInstance(DuckDB &db);
 // Static member initialization - required for all static class members in C++
 DuckDBPyModuleState *DuckDBPyModuleState::g_module_state = nullptr;
 
-// Module state constructor
 DuckDBPyModuleState::DuckDBPyModuleState() {
-	// Create caches
-	instance_cache = make_uniq<DBInstanceCache>();
-	// import_cache: direct object due to frequent calls
+	// Caches are constructed as direct objects - no heap allocation needed
 
 #ifdef Py_GIL_DISABLED
 	// Initialize lock object for critical sections
@@ -122,12 +118,11 @@ PythonImportCache *DuckDBPyModuleState::GetImportCache() {
 }
 
 void DuckDBPyModuleState::ClearImportCache() {
-	// Direct object will be cleaned up automatically by destructor
-	// TODO: If explicit clearing is needed, add Clear() method to PythonImportCache
+	import_cache = PythonImportCache();
 }
 
 DBInstanceCache *DuckDBPyModuleState::GetInstanceCache() {
-	return instance_cache.get();
+	return &instance_cache;
 }
 
 } // namespace duckdb

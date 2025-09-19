@@ -43,7 +43,7 @@ struct DuckDBPyModuleState {
 
 private:
 	PythonImportCache import_cache;
-	std::unique_ptr<DBInstanceCache> instance_cache;
+	DBInstanceCache instance_cache;
 #ifdef Py_GIL_DISABLED
 	py::object default_con_lock;
 #endif
