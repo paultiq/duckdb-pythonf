@@ -57,10 +57,13 @@ jobs:
         env:
           CIBW_ARCHS: ${{ env.ARCH }}
           CIBW_BUILD: ${{ env.PYTHON_VERSION }}-${{ env.CIBW_SYSTEM }}_${{ env.ARCH }}
-          CIBW_TEST_SKIP: '*'
+          CIBW_BEFORE_ALL: >
+            mkdir -p /output/ccache
+          CIBW_TEST_COMMAND: >
+            echo "ccache stats:" && ccache -s
           # Minimal build configuration - use pyproject.toml override
           CIBW_ENVIRONMENT: >
-            CCACHE_DIR={project}/wheelhouse/ccache
+            CCACHE_DIR=/output/ccache
             CI_MINIMAL_BUILD=true
             CMAKE_BUILD_TYPE=MinSizeRel
             CMAKE_BUILD_PARALLEL_LEVEL=1
