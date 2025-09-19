@@ -37,9 +37,6 @@ jobs:
         with:
           path: ./wheelhouse/ccache
           key: ccache-${{ env.PYTHON_VERSION }}-${{ env.OS }}
-          restore-keys: |
-            ccache-${{ env.PYTHON_VERSION }}-${{ env.OS }}-
-
 
       - name: Export test requirements
         shell: bash
