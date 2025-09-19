@@ -121,7 +121,7 @@ cmake.build-type = "Debug"
 if.state = "editable"
 if.env.COVERAGE = false
 inherit.cmake.define = "append"
-cmake.define.DISABLE_UNITY = "1"
+# cmake.define.DISABLE_UNITY = "1"
 
 [tool.scikit-build.sdist]
 include = [
