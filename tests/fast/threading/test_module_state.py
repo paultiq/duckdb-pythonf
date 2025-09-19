@@ -4,6 +4,8 @@ import tempfile
 import threading
 import time
 
+import pytest
+
 import duckdb
 
 
@@ -79,8 +81,8 @@ def test_environment_detection():
     assert isinstance(interactive, bool)
 
 
-def test_concurrent_connection_creation():
-    num_threads = 20
+@pytest.mark.parametrize("num_threads", [15, 20, 25])
+def test_concurrent_connection_creation(num_threads):
     barrier = threading.Barrier(num_threads)
 
     def worker(thread_id):
@@ -101,8 +103,8 @@ def test_concurrent_connection_creation():
 
     assert all(results)
 
-def test_concurrent_instance_cache_access(tmp_path):
-    num_threads = 15
+@pytest.mark.parametrize("num_threads", [10, 15, 20])
+def test_concurrent_instance_cache_access(tmp_path, num_threads):
     barrier = threading.Barrier(num_threads)
 
     def worker(thread_id):
@@ -125,14 +127,14 @@ def test_concurrent_instance_cache_access(tmp_path):
     assert all(results)
 
 
-def test_concurrent_import_cache_access():
-    num_threads = 15
+@pytest.mark.parametrize("num_threads", [10, 15, 20])
+def test_concurrent_import_cache_access(num_threads):
     barrier = threading.Barrier(num_threads)
 
     def worker(thread_id):
         barrier.wait()
 
-        for i in range(20):
+        for _i in range(20):
             with duckdb.connect(":memory:") as conn:
                 try:
                     conn.execute("CREATE TABLE test AS SELECT range as x FROM range(5)")
@@ -164,15 +166,15 @@ def test_concurrent_import_cache_access():
     assert all(results), "Some threads failed"
 
 
-def test_concurrent_environment_detection():
+@pytest.mark.parametrize("num_threads", [10, 15, 20])
+def test_concurrent_environment_detection(num_threads):
     """Test concurrent access to environment detection."""
-    num_threads = 15
     barrier = threading.Barrier(num_threads)
 
     def worker(thread_id):
         barrier.wait()
 
-        for i in range(30):
+        for _i in range(30):
             version = duckdb.__formatted_python_version__
             interactive = duckdb.__interactive__
 

@@ -1,5 +1,9 @@
 """
 Test module lifecycle 
+
+Reloading and unload are not expected nor required behaviors -
+these tests are to document current behavior so that changes
+are visible. 
 """
 import sys
 import importlib
@@ -50,7 +54,7 @@ def test_dynamic_module_loading():
         
     module_id_1 = id(sys.modules['duckdb'])
 
-    # Unload module
+    # "Unload" module (not really, just to try it)
     if 'duckdb' in sys.modules:
         del sys.modules['duckdb']
 
@@ -61,7 +65,7 @@ def test_dynamic_module_loading():
     # Verify module is unloaded
     assert 'duckdb' not in sys.modules, "Module not properly unloaded"
 
-    # Reload module
+    # import (load) module
     import duckdb
     module_id_2 = id(sys.modules['duckdb'])
 
@@ -86,7 +90,6 @@ def test_complete_module_unload_with_live_connections():
 
     module_id_1 = id(sys.modules['duckdb'])
 
-    # Complete module unload
     if 'duckdb' in sys.modules:
         del sys.modules['duckdb']
     del duckdb

@@ -5,6 +5,8 @@ import threading
 import time
 import weakref
 
+import pytest
+
 import duckdb
 
 
@@ -15,13 +17,13 @@ def test_module_state_race(num_threads_testing):
     def worker(thread_id):
         barrier.wait()
 
-        for i in range(30): 
+        for _i in range(30):
             with duckdb.connect(":memory:") as conn:
                 conn.execute("SELECT 1")
                 int_type = duckdb.type("INTEGER")
                 assert int_type is not None, f"Thread {thread_id}: type creation failed"
 
-            if i % 10 == 0:
+            if _i % 10 == 0:
                 time.sleep(0.0001)
 
         return True
@@ -68,8 +70,8 @@ def test_connection_instance_cache_race(tmp_path, num_threads_testing):
     assert all(results)
 
 
-def test_cleanup_race():
-    num_threads = 20
+@pytest.mark.parametrize("num_threads", [15, 20, 25])
+def test_cleanup_race(num_threads):
 
     def worker(thread_id):
         weak_refs = []
@@ -110,14 +112,14 @@ def test_cleanup_race():
     assert all(results), "Some threads failed"
 
 
-def test_default_connection_race():
-    num_threads = 25
+@pytest.mark.parametrize("num_threads", [20, 25, 30])
+def test_default_connection_race(num_threads):
     barrier = threading.Barrier(num_threads)
 
     def worker(thread_id):
         barrier.wait()
 
-        for i in range(30):
+        for _i in range(30):
             with duckdb.connect() as conn1:
                 r1 = conn1.execute("SELECT 1").fetchone()[0]
                 assert r1 == 1, f"Thread {thread_id}: expected 1, got {r1}"
@@ -141,8 +143,8 @@ def test_default_connection_race():
     assert all(results)
 
 
-def test_type_system_race():
-    num_threads = 20
+@pytest.mark.parametrize("num_threads", [15, 20, 25])
+def test_type_system_race(num_threads):
     barrier = threading.Barrier(num_threads)
 
     def worker(thread_id):
@@ -178,11 +180,11 @@ def test_type_system_race():
     assert all(results)
 
 
-def test_import_cache_race():
-    num_threads = 15
+@pytest.mark.parametrize("num_threads", [10, 15, 20])
+def test_import_cache_race(num_threads):
 
     def worker(thread_id):
-        for i in range(50):
+        for _i in range(50):
             with duckdb.connect(":memory:") as conn:
                 try:
                     conn.execute(
