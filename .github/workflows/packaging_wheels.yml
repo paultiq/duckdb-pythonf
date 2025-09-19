@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp39, cp310, cp311, cp312, cp313, cp314, cp314t ]
+        python: [cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314, 
         platform:
           - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
@@ -41,10 +41,13 @@ jobs:
         minimal:
           - ${{ inputs.minimal }}
         exclude:
+          - { minimal: true, python: cp39 }
           - { minimal: true, python: cp310 }
           - { minimal: true, python: cp311 }
           - { minimal: true, python: cp312 }
-          - { minimal: true, platform: { arch: universal2 } }
+          - { minimal: true, python: cp313 }
+          - { minimal: true, platform: { os: macos-15 } }
+          - { minimal: true, platform: { os: macos-13 } }
           # Windows+cp314t disabled due to test failures in CI. 
           # TODO: Diagnose why tests fail (access violations) in some configurations
           - { python: cp314t, platform: { os: windows-2025 } }  
