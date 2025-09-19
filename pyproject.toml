@@ -389,3 +389,10 @@ before-build = ["brew install ccache"]
 
 [tool.cibuildwheel.windows]
 before-build = ["choco install ccache"]
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "^win32"
+cmake.args = [
+   "-G", "Ninja",
+   "--log-level=DEBUG",
+]
