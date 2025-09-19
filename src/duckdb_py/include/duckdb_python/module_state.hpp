@@ -20,9 +20,6 @@ namespace duckdb {
 
 // Module state structure to hold per-interpreter state
 struct DuckDBPyModuleState {
-	// TODO: Make private / move behind a thread-safe accessor
-	shared_ptr<DuckDBPyConnection> default_connection_ptr;
-
 	// Python environment tracking
 	PythonEnvironmentType environment = PythonEnvironmentType::NORMAL;
 	string formatted_python_version;
@@ -42,15 +39,18 @@ struct DuckDBPyModuleState {
 	static void SetGlobalModuleState(DuckDBPyModuleState *state);
 
 private:
+	shared_ptr<DuckDBPyConnection> default_connection_ptr;
 	PythonImportCache import_cache;
 	DBInstanceCache instance_cache;
 #ifdef Py_GIL_DISABLED
 	py::object default_con_lock;
 #endif
 
-	    // Static module state cache for performance optimization
-	    // TODO: Replace with proper per-interpreter state for multi-interpreter support
-	    static DuckDBPyModuleState *g_module_state;
+	// Implemented as static as a first step towards PEP 489 / multi-phase init
+	// Intent is to move to per-module object, but frequent calls to import_cache
+	// need to be considered carefully.
+	// TODO: Replace with non-static per-interpreter state for multi-interpreter support
+	static DuckDBPyModuleState *g_module_state;
 
 	// Non-copyable
 	DuckDBPyModuleState(const DuckDBPyModuleState &) = delete;
