@@ -92,6 +92,9 @@ jobs:
         if: ${{ matrix.platform.cibw_system == 'win' }}
         with:
           arch: ${{ matrix.platform.arch }}
+        env:
+          # Override the Debug default that vcvarsall.bat causes in MSVC environment
+          CMAKE_BUILD_TYPE: Release
 
       - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
         uses: pypa/cibuildwheel@v3.1
