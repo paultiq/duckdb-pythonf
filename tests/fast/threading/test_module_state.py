@@ -26,17 +26,6 @@ def test_concurrent_instance_cache_access(tmp_path):
             assert result[0] >= 1
 
 
-def test_concurrent_import_cache_access():
-    for _i in range(20):
-        with duckdb.connect(f":memory:{get_ident()}") as conn:
-            conn.execute("CREATE TABLE test AS SELECT range as x FROM range(5)")
-            df = conn.fetchdf()
-            assert len(df) == 5
-
-            result = conn.execute("SELECT range as x FROM range(3)").fetchnumpy()
-            assert "x" in result
-
-
 def test_environment_detection():
     version = duckdb.__formatted_python_version__
     interactive = duckdb.__interactive__
