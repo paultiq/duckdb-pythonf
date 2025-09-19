@@ -132,7 +132,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          uv sync --no-install-project
+          uv sync --no-install-project --no-build-isolation
           uv pip install wheelhouse/*.whl
 
       - name: Run ${{ matrix.pytest_config.name }} tests
