@@ -101,13 +101,6 @@ jobs:
             iterations: 1
 
     steps:
-      - name: Checkout test files only
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            tests
-          sparse-checkout-cone-mode: false
-
       - uses: astral-sh/setup-uv@v6
         with:
           version: "0.8.16"
@@ -115,6 +108,14 @@ jobs:
           activate-environment: true
           cache-suffix: -${{ env.PYTHON_VERSION }}-${{ env.OS }}
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Checkout test files only
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            tests
+            pyproject.toml
+          sparse-checkout-cone-mode: false
 
       - name: Download wheel
         uses: actions/download-artifact@v4
@@ -131,8 +132,8 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          uv pip install wheelhouse/*.whl --no-deps --force-reinstall
-          uv pip install -r test-requirements.txt
+          uv sync --no-install-project
+          uv pip install wheelhouse/*.whl
 
       - name: Run ${{ matrix.pytest_config.name }} tests
         shell: bash
