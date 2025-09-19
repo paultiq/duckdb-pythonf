@@ -111,11 +111,6 @@ jobs:
 
       - name: Checkout test files only
         uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            tests
-            pyproject.toml
-          sparse-checkout-cone-mode: false
 
       - name: Download wheel
         uses: actions/download-artifact@v4
@@ -132,7 +127,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          uv sync --no-install-project --no-build-isolation
+          uv sync --no-install-project
           uv pip install wheelhouse/*.whl
 
       - name: Run ${{ matrix.pytest_config.name }} tests
