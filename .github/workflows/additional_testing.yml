@@ -106,7 +106,6 @@ jobs:
         with:
           sparse-checkout: |
             tests
-            pyproject.toml
           sparse-checkout-cone-mode: false
 
       - uses: astral-sh/setup-uv@v6
@@ -133,8 +132,7 @@ jobs:
         shell: bash
         run: |
           uv pip install wheelhouse/*.whl --no-deps --force-reinstall
-          uv sync --no-install-project --no-build-isolation               
-          rm -f pyproject.toml  # Remove project metadata to prevent build attempts
+          uv pip install -r test-requirements.txt
 
       - name: Run ${{ matrix.pytest_config.name }} tests
         shell: bash
