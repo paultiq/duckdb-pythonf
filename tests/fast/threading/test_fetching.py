@@ -40,7 +40,7 @@ def test_fetching():
 
         result4 = conn.execute(
             f"SELECT COUNT(*) FROM batch_data WHERE name LIKE 'name_{thread_id}_%'"
-        ).fetcharrow_table()
+        ).fetch_arrow_table()
         assert result4.num_rows == 1
     finally:
         conn.close()

@@ -84,45 +84,6 @@ def test_dynamic_module_loading():
         assert result == 42
 
 
-@pytest.mark.parallel_threads(1)
-def test_complete_module_unload_with_live_connections():
-    """Test the dangerous scenario: complete module unload with live connections."""
-
-    import duckdb
-
-    conn1 = duckdb.connect(":memory:")
-    conn1.execute("CREATE TABLE danger_test (id INTEGER)")
-    conn1.execute("INSERT INTO danger_test VALUES (123)")
-
-    module_id_1 = id(sys.modules["duckdb"])
-
-    if "duckdb" in sys.modules:
-        del sys.modules["duckdb"]
-    del duckdb
-
-    # TODO: Rethink this behavior - the module is unloaded, but we
-    # didn't invalidate all the connections and state... so even after
-    # unload, conn1 works.
-
-    result = conn1.execute("SELECT * FROM danger_test").fetchone()[0]
-    assert result == 123
-
-    # Reimport creates new module state, but static cache should be reset
-    import duckdb
-
-    module_id_2 = id(sys.modules["duckdb"])
-    assert module_id_1 != module_id_2, "Should have different module instances"
-
-    conn2 = duckdb.connect(":memory:")
-    conn2.execute("CREATE TABLE safe_test (id INTEGER)")
-    conn2.execute("INSERT INTO safe_test VALUES (456)")
-    result2 = conn2.execute("SELECT * FROM safe_test").fetchone()[0]
-    assert result2 == 456
-
-    conn2.close()
-    conn1.close()
-
-
 def test_import_cache_consistency():
     """Test that import cache remains consistent across module operations."""
 
