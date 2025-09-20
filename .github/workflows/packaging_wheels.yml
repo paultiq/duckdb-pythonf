@@ -141,10 +141,10 @@ jobs:
           # - UV creates random build-env-* dirs causing cache misses (https://github.com/astral-sh/uv/issues/13096)
           # - Using --no-isolation to eliminate random UV build environments
           #
-          SCCACHE_LOG: trace
-          SCCACHE_LOG_LEVEL: trace
-          RUST_LOG: trace
-          SCCACHE_NO_DAEMON: "1"
+          # SCCACHE_LOG: trace
+          # SCCACHE_LOG_LEVEL: trace
+          # RUST_LOG: trace
+          # SCCACHE_NO_DAEMON: "1"
 
           # no-build-isolation uses the same build-env path for each build, stable paths needed for caching
           CIBW_ENVIRONMENT: >
