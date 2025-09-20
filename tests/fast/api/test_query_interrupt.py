@@ -9,7 +9,7 @@ import _thread as thread
 
 def send_keyboard_interrupt():
     # Wait a little, so we're sure the 'execute' has started
-    time.sleep(0.1)
+    time.sleep(1)
     # Send an interrupt to the main thread
     thread.interrupt_main()
 
@@ -25,7 +25,7 @@ class TestQueryInterruption(object):
         # Start the thread
         thread.start()
         try:
-            res = con.execute('select count(*) from range(100000000000)').fetchall()
+            con.execute('select * from range(100000) t1,range(100000) t2').fetchall()
         except RuntimeError:
             # If this is not reached, we could not cancel the query before it completed
             # indicating that the query interruption functionality is broken
