@@ -59,8 +59,10 @@ all = [ # users can install duckdb with 'duckdb[all]', which will install this l
 ######################################################################################################
 
 [build-system]
-build-backend = "duckdb_packaging.build_backend"
-backend-path = ["./"]
+build-backend = "scikit_build_core.build"
+# Temporarily using standard backend to test sccache fixes
+# build-backend = "duckdb_packaging.build_backend"
+# backend-path = ["./"]
 requires = [
     "scikit-build-core>=0.11.4",
 	"pybind11[global]>=2.6.0",
