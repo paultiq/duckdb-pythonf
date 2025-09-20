@@ -403,7 +403,7 @@ indent-style = "space"
 ######################################################################################################
 [tool.cibuildwheel]
 build-frontend = { name = "build[uv]", args = ["--no-isolation"] }
-before-build = "uv pip install -U scikit-build-core cmake ninja 'pybind11[global]>=2.6.0' 'setuptools_scm>=8.0'"
+before-build = "uv pip install -U scikit-build-core cmake ninja 'pybind11[global]>=2.6.0' 'setuptools_scm>=8.0' && export PYTHONPATH=/project:$PYTHONPATH"
 config-settings = "build-dir=build/{wheel_tag}"
 
 manylinux-x86_64-image = "manylinux_2_28"
