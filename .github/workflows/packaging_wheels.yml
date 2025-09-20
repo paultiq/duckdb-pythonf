@@ -95,6 +95,22 @@ jobs:
         if: ${{ inputs.set-version != '' }}
         run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }}" >> $GITHUB_ENV
 
+      - name: Cache manylinux container
+          uses: actions/cache@v4
+          with:
+            path: /tmp/docker-images
+            key: manylinux-${{ matrix.platform.arch }}-2025.03.09-1
+
+      - name: Load cached images
+        run: |
+          if [ -f /tmp/docker-images/manylinux.tar ]; then
+            docker load < /tmp/docker-images/manylinux.tar
+          else
+            mkdir -p /tmp/docker-images
+            docker pull quay.io/pypa/manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1
+            docker save quay.io/pypa/manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1 > /tmp/docker-images/manylinux.tar
+          fi
+
       # Install Astral UV, which will be used as build-frontend for cibuildwheel
       - uses: astral-sh/setup-uv@v6
         with:
