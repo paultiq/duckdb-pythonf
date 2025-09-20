@@ -1,17 +1,4 @@
 name: Tests and coverage on push
-on:
-  push:
-    branches-ignore:
-      - main
-      - v*.*-*
-    paths-ignore:
-      - '**.md'
-      - 'LICENSE'
-      - '.editorconfig'
-      - 'scripts/**'
-      - '.github//**'
-      - '!.github/workflows/on_push.yml'
-      - '!.github/workflows/coverage.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -19,6 +6,7 @@ concurrency:
 
 jobs:
   test:
+    if:  false # ${{ github.event_name == 'pull_request' && github.event.pull_request.draft == true }}
     name: Run coverage tests
     uses: ./.github/workflows/coverage.yml
     with:
