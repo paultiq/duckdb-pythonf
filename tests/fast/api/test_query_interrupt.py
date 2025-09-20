@@ -7,7 +7,7 @@ import _thread as thread
 
 
 def send_keyboard_interrupt():
-    time.sleep(0.1)
+    time.sleep(1)
     thread.interrupt_main()
 
 

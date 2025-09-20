@@ -16,7 +16,7 @@ class TestConnectionInterrupt(object):
 
         def interrupt():
             # Wait for query to start running before interrupting
-            time.sleep(0.1)
+            time.sleep(1)
             conn.interrupt()
 
         thread = threading.Thread(target=interrupt)
