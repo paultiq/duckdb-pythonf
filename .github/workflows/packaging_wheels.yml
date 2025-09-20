@@ -150,14 +150,20 @@ jobs:
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
-            sccache --show-stats
+            sccache --show-stats &&
+            uv sync --no-install-project &&
+            uv pip install 'pybind11[global]>=2.6.0'
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
-            brew install sccache
+            brew install sccache &&
+            uv sync --no-install-project &&
+            uv pip install 'pybind11[global]>=2.6.0'
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
-            choco install sccache
+            choco install sccache &&
+            uv sync --no-install-project &&
+            uv pip install 'pybind11[global]>=2.6.0'
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
