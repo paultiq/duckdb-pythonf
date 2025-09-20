@@ -402,7 +402,20 @@ indent-style = "space"
 ######################################################################################################
 [tool.cibuildwheel]
 build-frontend = "build[uv]"
-environment = { UV_PROJECT_ENVIRONMENT = "/tmp/duckdb-build/.venv", VIRTUAL_ENV = "/tmp/duckdb-build/.venv" }
+before-build = [
+  "mkdir -p /tmp/duckdb-build/.venv /tmp/uv-cache /tmp/uv-tmp",
+  "export UV_PROJECT_ENVIRONMENT=/tmp/duckdb-build/.venv",
+  "export UV_CACHE_DIR=/tmp/uv-cache",
+  "export UV_TMPDIR=/tmp/uv-tmp",
+  "export UV_NO_BUILD_ISOLATION=1"
+]
+before-build-windows = [
+  "mkdir C:\\tmp\\duckdb-build\\.venv C:\\tmp\\uv-cache C:\\tmp\\uv-tmp 2>nul || echo OK",
+  "set UV_PROJECT_ENVIRONMENT=C:\\tmp\\duckdb-build\\.venv",
+  "set UV_CACHE_DIR=C:\\tmp\\uv-cache",
+  "set UV_TMPDIR=C:\\tmp\\uv-tmp",
+  "set UV_NO_BUILD_ISOLATION=1"
+]
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
