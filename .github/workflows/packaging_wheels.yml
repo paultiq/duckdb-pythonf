@@ -30,12 +30,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314, 
+        python: [ cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314, 
         platform:
-          # - { os: windows-2025,     arch: amd64,      cibw_system: win }
+          - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
           # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
-          # - { os: macos-15,         arch: arm64,      cibw_system: macosx }
+          - { os: macos-15,         arch: arm64,      cibw_system: macosx }
+          - { os: macos-26,         arch: arm64,      cibw_system: macosx }
           # - { os: macos-15,         arch: universal2, cibw_system: macosx }
           # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
         minimal:
@@ -58,7 +59,9 @@ jobs:
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
-        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs --durations=5
+        uv run -v pytest ${{ inputs.testsuite == 'fast' && './tests/fast' || './tests' }} --verbose --ignore=./tests/stubs --durations=5 -n 2 &&
+        uv run -v pytest ./tests/fast/threading --durations=5 --parallel-threads=10 --iterations=5 -n 2
+
       SCCACHE_GHA_ENABLED: "on"
       SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
       ACTIONS_CACHE_SERVICE_V2: "1"  
