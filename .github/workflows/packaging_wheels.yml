@@ -150,7 +150,7 @@ jobs:
             mkdir -p /tmp/duckdb-build /tmp/uv-cache /tmp/uv-tmp /tmp/pip-cache &&
             brew install sccache
           CIBW_BEFORE_BUILD_WINDOWS: >
-            mkdir "C:\tmp\duckdb-build" 2>nul || mkdir "C:\tmp\uv-cache" 2>nul || mkdir "C:\tmp\uv-tmp" 2>nul || mkdir "C:\tmp\pip-cache" 2>nul || echo "Directories created or already exist" &&
+            (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\uv-cache" 2>nul & mkdir "C:\tmp\uv-tmp" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache
       - name: Upload wheel
