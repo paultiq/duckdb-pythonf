@@ -95,30 +95,6 @@ jobs:
         if: ${{ inputs.set-version != '' }}
         run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }}" >> $GITHUB_ENV
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        if: matrix.platform.cibw_system == 'manylinux'
-
-      - name: Create temporary Dockerfile
-        if: matrix.platform.cibw_system == 'manylinux'
-        run: |
-          cat > /tmp/Dockerfile.manylinux << EOF
-          FROM quay.io/pypa/manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1
-          # Add minimal layer to ensure image is built but base layers are cached
-          RUN echo "Cached manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1" > /cached_info
-          EOF
-
-      - name: Build and cache manylinux base
-        uses: docker/build-push-action@v6
-        if: matrix.platform.cibw_system == 'manylinux'
-        with:
-          context: /tmp
-          file: /tmp/Dockerfile.manylinux
-          cache-from: type=gha,scope=manylinux-${{ matrix.platform.arch }}-2025.03.09-1
-          cache-to: type=gha,scope=manylinux-${{ matrix.platform.arch }}-2025.03.09-1,mode=max
-          tags: cached-manylinux-${{ matrix.platform.arch }}:latest
-          load: true
-          push: false
 
       # Install Astral UV, which will be used as build-frontend for cibuildwheel
       - uses: astral-sh/setup-uv@v6
@@ -139,9 +115,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.platform.cibw_system == 'manylinux' && matrix.platform.arch == 'x86_64' && 'cached-manylinux-x86_64:latest' || '' }}
-          CIBW_MANYLINUX_AARCH64_IMAGE: ${{ matrix.platform.cibw_system == 'manylinux' && matrix.platform.arch == 'aarch64' && 'cached-manylinux-aarch64:latest' || '' }}
-                    
+
           # SCCACHE Notes:
           # - Without the /project dir and tmpdirs (not sure exactly which mattered), the python environment is installed to a random tmp dir, which breaks
           # the cache key... so, only the external/duckdb would cache, and not the project itself
