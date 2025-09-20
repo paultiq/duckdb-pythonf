@@ -214,7 +214,6 @@ exclude = [
 
 [tool.uv]
 default-groups = ["dev"]
-no-build-isolation = true
 # `tool.uv.environments` and `tool.uv.required-environments` are used for dependency resolving. These settings should
 # make sure that all test and dev dependencies can be resolved on these platforms, which are all platforms we currently
 # build wheels for.
@@ -408,8 +407,7 @@ indent-style = "space"
 # (to some extent).
 ######################################################################################################
 [tool.cibuildwheel]
-build-frontend = "build[uv]"
-
+build-frontend = { name = "build[uv]", args = ["--no-use-pep517"] }
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
