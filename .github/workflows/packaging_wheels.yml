@@ -116,7 +116,8 @@ jobs:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           UV_PYTHON: ${{ matrix.python }}
-
+          UV_PROJECT_ENVIRONMENT: /project/.venv
+          PYTHONPATH: /project
           # SCCACHE Notes:
           # - Without the /project dir and tmpdirs (not sure exactly which mattered), the python environment is installed to a random tmp dir, which breaks
           # the cache key... so, only the external/duckdb would cache, and not the project itself
@@ -138,8 +139,7 @@ jobs:
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="/project"
             TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
-            PYTHONPATH="/project:$PYTHONPATH"
-            UV_PROJECT_ENVIRONMENT="/project/.venv"
+
             UV_CACHE_DIR="/tmp/duckdb-build/uv-cache"
             UV_PYTHON=/opt/python/cp314-cp314t/bin/python
           CIBW_ENVIRONMENT_WINDOWS: >
@@ -147,11 +147,8 @@ jobs:
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="C:/project"
             TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
-            PYTHONPATH="C:/project;%PYTHONPATH%"
-            UV_PROJECT_ENVIRONMENT="C:/project/.venv"
-            UV_CACHE_DIR="C:/tmp/duckdb-build/uv-cache"
 
-          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PYTHON
+          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PYTHON UV_PROJECT_ENVIRONMENT PYTHONPATH
 
           CIBW_BEFORE_BUILD_LINUX: >
             mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
