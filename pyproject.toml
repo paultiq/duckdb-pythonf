@@ -214,6 +214,7 @@ exclude = [
 
 [tool.uv]
 default-groups = ["dev"]
+no-build-isolation = true
 # `tool.uv.environments` and `tool.uv.required-environments` are used for dependency resolving. These settings should
 # make sure that all test and dev dependencies can be resolved on these platforms, which are all platforms we currently
 # build wheels for.
