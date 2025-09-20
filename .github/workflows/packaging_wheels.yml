@@ -137,31 +137,25 @@ jobs:
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="/project"
             TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
-            UV_CACHE_DIR="/tmp/uv-cache" UV_TMPDIR="/tmp/uv-tmp"
-            UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv" VIRTUAL_ENV="/tmp/duckdb-build/.venv"
-            UV_NO_BUILD_ISOLATION=1
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_BUILD_TYPE=Release CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="C:/project"
             TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
-            UV_CACHE_DIR="C:/tmp/uv-cache" UV_TMPDIR="C:/tmp/uv-tmp"
-            UV_PROJECT_ENVIRONMENT="C:/tmp/duckdb-build/.venv" VIRTUAL_ENV="C:/tmp/duckdb-build/.venv"
-            UV_NO_BUILD_ISOLATION=1
 
-          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP UV_CACHE_DIR UV_TMPDIR UV_PROJECT_ENVIRONMENT VIRTUAL_ENV PIP_CACHE_DIR
+          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR
 
           CIBW_BEFORE_BUILD_LINUX: >
-            mkdir -p /tmp/duckdb-build /tmp/uv-cache /tmp/uv-tmp /tmp/pip-cache &&
+            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
             sccache --show-stats
           CIBW_BEFORE_BUILD_MACOS: >
-            mkdir -p /tmp/duckdb-build /tmp/uv-cache /tmp/uv-tmp /tmp/pip-cache &&
+            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
             brew install sccache
           CIBW_BEFORE_BUILD_WINDOWS: >
-            (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\uv-cache" 2>nul & mkdir "C:\tmp\uv-tmp" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
+            (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache
       - name: Upload wheel

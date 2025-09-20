@@ -401,14 +401,8 @@ indent-style = "space"
 # (to some extent).
 ######################################################################################################
 [tool.cibuildwheel]
-build-frontend = "build[uv]"
-before-build = [
-  "mkdir -p /tmp/duckdb-build/.venv /tmp/uv-cache /tmp/uv-tmp",
-  "export UV_PROJECT_ENVIRONMENT=/tmp/duckdb-build/.venv",
-  "export UV_CACHE_DIR=/tmp/uv-cache",
-  "export UV_TMPDIR=/tmp/uv-tmp",
-  "export UV_NO_BUILD_ISOLATION=1"
-]
+build-frontend = { name = "build[uv]", args = ["--no-build-isolation"] }
+before-build = "uv pip install 'scikit-build-core>=0.11.4' 'pybind11[global]>=2.6.0' 'setuptools_scm>=8.0'"
 
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
