@@ -98,19 +98,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         if: matrix.platform.cibw_system == 'manylinux'
-        with:
-          driver: docker
-          install: true
+
+      - name: Create temporary Dockerfile
+        if: matrix.platform.cibw_system == 'manylinux'
+        run: |
+          cat > /tmp/Dockerfile.manylinux << EOF
+          FROM quay.io/pypa/manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1
+          # Add minimal layer to ensure image is built but base layers are cached
+          RUN echo "Cached manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1" > /cached_info
+          EOF
 
       - name: Build and cache manylinux base
         uses: docker/build-push-action@v6
         if: matrix.platform.cibw_system == 'manylinux'
         with:
-          context: .
-          file: |
-            FROM quay.io/pypa/manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1
-            # Add minimal layer to ensure image is built but base layers are cached
-            RUN echo "Cached manylinux2014_${{ matrix.platform.arch }}:2025.03.09-1" > /cached_info
+          context: /tmp
+          file: /tmp/Dockerfile.manylinux
           cache-from: type=gha,scope=manylinux-${{ matrix.platform.arch }}-2025.03.09-1
           cache-to: type=gha,scope=manylinux-${{ matrix.platform.arch }}-2025.03.09-1,mode=max
           tags: cached-manylinux-${{ matrix.platform.arch }}:latest
