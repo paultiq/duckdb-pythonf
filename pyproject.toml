@@ -401,7 +401,7 @@ indent-style = "space"
 # (to some extent).
 ######################################################################################################
 [tool.cibuildwheel]
-build-frontend = "build[uv]"
+build-frontend = { name = "build[uv]", args = ["--no-build-isolation"] }
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
