@@ -1,6 +1,9 @@
 name: On Push Fast Tests
 on: push
 
+# This workflow is runnable locally for debugging:
+# using https://github.com/nektos/act
+# 
 jobs:
   build_wheels:
     name: 'Wheel: ${{ matrix.python }}-${{ matrix.platform.os }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}'
@@ -42,7 +45,7 @@ jobs:
       CMAKE_VERBOSE_MAKEFILE: "ON"
 
       SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
-      SCCACHE_BASEDIR: "/project"
+      SCCACHE_BASEDIR: "/tmp/duckdb-build"
       ACTIONS_CACHE_SERVICE_V2: "1"
 
       TMPDIR: "/tmp/duckdb-build"
