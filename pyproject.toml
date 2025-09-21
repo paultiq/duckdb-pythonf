@@ -60,7 +60,7 @@ all = [ # users can install duckdb with 'duckdb[all]', which will install this l
 
 [build-system]
 build-backend = "duckdb_packaging.build_backend"
-backend-path = ["./"]
+backend-path = ["."]
 requires = [
     "scikit-build-core>=0.11.4",
 	"pybind11[global]>=2.6.0",
@@ -408,7 +408,7 @@ indent-style = "space"
 ######################################################################################################
 [tool.cibuildwheel]
 build-frontend = { name = "build[uv]", args = ["--no-isolation"] }
-before-build = "mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache && python -m pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'"
+before-build = "python -m pip install -e . && mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache && python -m pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'"
 
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"

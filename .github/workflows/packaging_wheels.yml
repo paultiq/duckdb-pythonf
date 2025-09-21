@@ -30,10 +30,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314, 
+        python: [ cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
         platform:
           - { os: windows-2025,     arch: amd64,      cibw_system: win }
-          - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
+          - { os: ubuntu-latest,     arch: x86_64,     cibw_system: manylinux }
           # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
           #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
           - { os: macos-26,         arch: arm64,      cibw_system: macosx }
@@ -106,7 +106,6 @@ jobs:
         if: ${{ inputs.set-version != '' }}
         run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }}" >> $GITHUB_ENV
 
-
       # Install Astral UV, which will be used as build-frontend for cibuildwheel
       - uses: astral-sh/setup-uv@v6
         with:
@@ -114,6 +113,17 @@ jobs:
           enable-cache: false
           cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           python-version: ${{ matrix.python }}
+
+      # # Install Astral UV, which will be used as build-frontend for cibuildwheel
+      # - name: Install UV
+      #   shell: bash
+      #   env:
+      #     TMPDIR: /tmp
+      #   run: |
+      #     curl -LsSf https://astral.sh/uv/0.8.16/install.sh | sh
+      #     echo "$HOME/.local/bin" >> $GITHUB_PATH
+      #     export PATH="$HOME/.local/bin:$PATH"
+      #     uv --version
 
       # Load MSVC environment, needed for Windows - ninja builds
       - uses: ilammy/msvc-dev-cmd@v1
@@ -186,7 +196,13 @@ jobs:
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
-            sccache --show-stats
+            sccache --show-stats &&
+            echo "Installing build dependencies..." &&
+            python -m pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
+            echo "Current directory: $(pwd)" &&
+            echo "Directory contents:" && ls -la &&
+            echo "Testing duckdb_packaging import:" &&
+            python -c "import sys; print('Python path:', sys.path); import duckdb_packaging.build_backend; print('Import successful')"
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
             cp -r /project /tmp/project &&
