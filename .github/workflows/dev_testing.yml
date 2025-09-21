@@ -7,7 +7,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
+        python: [ cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
         platform:
           # - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-latest,     arch: x86_64,     cibw_system: manylinux }
@@ -39,8 +39,8 @@ jobs:
         uv run -v pytest ./tests/fast --verbose --ignore=./tests/stubs --durations=5 -n 2 &&
         uv run -v pytest ./tests/fast/threading --durations=5 --parallel-threads=10 --iterations=5 -n 2
 
-      # sccache configuration with path normalization
-      SCCACHE_GHA_ENABLED: "on"
+      CMAKE_VERBOSE_MAKEFILE: "ON"
+
       SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
       SCCACHE_BASEDIR: "/project"
       ACTIONS_CACHE_SERVICE_V2: "1"
@@ -48,21 +48,26 @@ jobs:
       TMPDIR: "/tmp/duckdb-build"
       TEMP: "/tmp/duckdb-build"  
     steps:
+      - name: Set SCCACHE_GHA_ENABLED
+        run: echo "SCCACHE_GHA_ENABLED=${{ env.ACT == 'true' && 'off' || 'on' }}" >> $GITHUB_ENV
+
       - name: Checkout DuckDB Python
+        if: ${{ env.ACT != 'true' }}
         uses: actions/checkout@v5
         with:
           # ref: ${{ inputs.duckdb-python-sha }}
           fetch-depth: 0
           submodules: true
-      # - name: Checkout DuckDB
-      #   shell: bash
-      #   continue-on-error: true  # sometimes helpful when merging branch->branch
-      #   if: ${{ inputs.duckdb-sha }}
-      #   run: |
-      #     cd external/duckdb
-      #     git fetch origin
-      #     git checkout ${{ inputs.duckdb-sha }}
+      - name: Checkout DuckDB
+        if: ${{ env.ACT != 'true' && inputs['duckdb-sha'] != '' }}
+        shell: bash
+        continue-on-error: true  # sometimes helpful when merging branch->branch
+        run: |
+          cd external/duckdb
+          git fetch origin
+          git checkout ${{ inputs.duckdb-sha }}
       - name: Configure Cache Env
+        if: ${{ env.ACT != 'true' }}
         uses: actions/github-script@v7
         with:
           script: |
@@ -74,24 +79,26 @@ jobs:
         if: ${{ inputs.set-version != '' }}
         run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }}" >> $GITHUB_ENV
 
-      # Install Astral UV, which will be used as build-frontend for cibuildwheel
+      # # Install Astral UV, which will be used as build-frontend for cibuildwheel
       - uses: astral-sh/setup-uv@v6
+        if: ${{ env.ACT != 'true' }}
         with:
-          version: "0.8.19"  # Version is important - it determines which Python build you get. Bump when new version of Python releases. 
+          # version: "0.8.19"  # Version is important - it determines which Python build you get. Bump when new version of Python releases. 
           enable-cache: false
           cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
           python-version: ${{ matrix.python }}
 
       # Used when running workflows locally
-      # - name: Install UV
-      #   shell: bash
-      #   env:
-      #     TMPDIR: /tmp
-      #   run: |
-      #     curl -LsSf https://astral.sh/uv/0.8.19/install.sh | sh
-      #     echo "$HOME/.local/bin" >> $GITHUB_PATH
-      #     export PATH="$HOME/.local/bin:$PATH"
-      #     uv --version
+      - name: Install UV
+        if: ${{ env.ACT == 'true' }}
+        shell: bash
+        env:
+          TMPDIR: /tmp
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/bin:$PATH"
+          uv --version
 
       # Load MSVC environment, needed for Windows - ninja builds
       - uses: ilammy/msvc-dev-cmd@v1
@@ -104,10 +111,16 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          
           CIBW_BUILD_FRONTEND: "build[uv]; args: --no-isolation"
-          UV_PYTHON: ${{ matrix.python }}
           UV_PROJECT_ENVIRONMENT: /project/.venv
-          PYTHONPATH: /project
+          UV_NO_BUILD_ISOLATION: "true"
+
+          CMAKE_C_COMPILER_LAUNCHER: ""
+          CMAKE_CXX_COMPILER_LAUNCHER: ""
+          CFLAGS: "-Wno-attributes" 
+          CXXFLAGS: "-Wno-attributes"
+          UV_PYTHON: ${{ matrix.python }}
           # SCCACHE Notes:
           # - Without the /project dir and tmpdirs (not sure exactly which mattered), the python environment is installed to a random tmp dir, which breaks
           # the cache key... so, only the external/duckdb would cache, and not the project itself
@@ -122,60 +135,57 @@ jobs:
           # SCCACHE_LOG_LEVEL: trace
           # RUST_LOG: trace
           # SCCACHE_NO_DAEMON: "1"
+          # PYTHONPATH="/project" ("." on mac and windows)
 
+          # UV_NO_BUILD_ISOLATION="true"
           # no-build-isolation uses the same build-env path for each build, stable paths needed for caching
-          CIBW_ENVIRONMENT: >
-            CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
-            CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
-            SCCACHE_BASEDIR="/tmp/duckdb-build"
-            TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
-            # UV_NO_BUILD_ISOLATION="true"
-            PYTHONPATH="/project"
-            UV_CACHE_DIR="/tmp/duckdb-build/uv-cache"
-            UV_PROJECT_ENVIRONMENT="/project/.venv"
-            UV_PYTHON=cp314t
-          CIBW_ENVIRONMENT_MACOS: >
-            CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
-            CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
-            SCCACHE_BASEDIR="/tmp/duckdb-build"
-            TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
-            # UV_NO_BUILD_ISOLATION="true"
-            PYTHONPATH="."
-            UV_CACHE_DIR="/tmp/duckdb-build/uv-cache"
-            UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv"
-            UV_PYTHON=cp314t
-          CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_BUILD_TYPE=Release CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
-            CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
-            SCCACHE_BASEDIR="/tmp/duckdb-build"
-            TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
-            # UV_NO_BUILD_ISOLATION="true"
-            PYTHONPATH="."
-            UV_CACHE_DIR="C:/tmp/duckdb-build/uv-cache"
-            UV_PROJECT_ENVIRONMENT="C:/project/.venv"
-            UV_PYTHON=cp314t
+          # SCCACHE_BASEDIR="/tmp/duckdb-build"
+          # TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
+          # UV_PROJECT_ENVIRONMENT="/project/.venv"
 
-          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PYTHON UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR
+          #SCCACHE_BASEDIR="/tmp/duckdb-build"
+          #TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
+          #UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv"
+
+          # SCCACHE_BASEDIR="/tmp/duckdb-build"
+          # TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
+          # UV_PROJECT_ENVIRONMENT="C:/project/.venv"
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_BUILD_TYPE=Release
+            PYTHONPATH="."
+          CIBW_ENVIRONMENT_MACOS: >
+            PYTHONPATH="."
+          CIBW_ENVIRONMENT_LINUX: >
+            PYTHONPATH="/project"
+            TMPDIR="/tmp/duckdb-build" 
+            TEMP="/tmp/duckdb-build"
+            UV_PROJECT_ENVIRONMENT="/project/.venv"
+
+          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR UV_PYTHON CFLAGS CXXFLAGS CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER CMAKE_VERBOSE_MAKEFILE CIBW_BUILD_FRONTEND
 
           CIBW_BEFORE_BUILD_LINUX: >
-            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
-            sccache --show-stats
+            sccache --show-stats &&
+
+            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
+            uv pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
+            python -c "import sys; print('Python path:', sys.path); import duckdb_packaging.build_backend; print('Import successful')"
+          # mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
           # Build dependencies installs needed if using no-isolation
           # uv pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
-            brew install sccache
+            brew install sccache &&
+            uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10'
           # Build dependencies installs needed if using no-isolation
           # uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
-            choco install sccache
-          # Build dependencies installs needed if using no-isolation
-          # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10" &&
+            choco install sccache &&
+            uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
