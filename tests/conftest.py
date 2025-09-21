@@ -267,10 +267,18 @@ def spark():
 
 
 @pytest.fixture(scope='function')
-def duckdb_cursor():
-    connection = duckdb.connect('')
-    yield connection
-    connection.close()
+def duckdb_cursor(tmp_path):
+    with duckdb.connect(tmp_path / "mytest") as connection:
+        yield connection
+
+
+@pytest.fixture(scope='function')
+def default_con():
+    # ensures each test uses a fresh default connection to avoid test leakage
+    # threading_unsafe fixture
+    duckdb.default_connection().close()
+    with duckdb.default_connection() as conn:
+        yield conn
 
 
 @pytest.fixture(scope='function')
@@ -336,3 +344,13 @@ def initialize_duckdb(request, tmp_path):
 
     duckdb.connect(test_dbfarm)
     return test_dbfarm
+
+
+@pytest.fixture(scope="function")
+def num_threads_testing():
+    """Get thread count: enough to load the system, but still as fast test."""
+    import multiprocessing
+
+    cpu_count = multiprocessing.cpu_count()
+    # Use 1.5x CPU count, max 12 for CI compatibility
+    return min(12, max(4, int(cpu_count * 1.5)))
