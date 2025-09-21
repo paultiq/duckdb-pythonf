@@ -25,7 +25,7 @@ from scikit_build_core.build import (
     get_requires_for_build_sdist,
     get_requires_for_build_editable,
     prepare_metadata_for_build_wheel,
-    prepare_metadata_for_build_editable,
+    prepare_metadata_for_build_editable as skbuild_prepare_metadata_for_build_editable,
 )
 
 from duckdb_packaging._versioning import create_git_tag, pep440_to_git_tag, get_git_describe, strip_post_from_version
@@ -228,6 +228,15 @@ def build_wheel(
     Raises:
         RuntimeError: If not in a git repository or sdist environment.
     """
+    # DEBUG: Print environment variables and inject UV_NO_BUILD_ISOLATION
+    _log("DEBUG: Environment variables:")
+    for key, value in sorted(os.environ.items()):
+        if 'UV' in key or 'TMPDIR' in key or 'TEMP' in key or 'PYTHONPATH' in key:
+            _log(f"  {key}={value}")
+
+    # Force UV_NO_BUILD_ISOLATION
+    os.environ['UV_NO_BUILD_ISOLATION'] = '1'
+    _log("DEBUG: Set UV_NO_BUILD_ISOLATION=1")
     # First figure out the duckdb version we should use
     duckdb_version = None
     if not _in_git_repository():
@@ -248,6 +257,24 @@ def build_wheel(
 
 
     return skbuild_build_wheel(wheel_directory, config_settings=config_settings, metadata_directory=metadata_directory)
+
+
+def prepare_metadata_for_build_editable(
+        metadata_directory: str,
+        config_settings: Optional[Dict[str, Union[List[str],str]]] = None,
+) -> str:
+    """Prepare metadata for editable install with debugging."""
+    # DEBUG: Print environment variables and inject UV_NO_BUILD_ISOLATION
+    _log("DEBUG: prepare_metadata_for_build_editable - Environment variables:")
+    for key, value in sorted(os.environ.items()):
+        if 'UV' in key or 'TMPDIR' in key or 'TEMP' in key or 'PYTHONPATH' in key:
+            _log(f"  {key}={value}")
+
+    # Force UV_NO_BUILD_ISOLATION
+    os.environ['UV_NO_BUILD_ISOLATION'] = '1'
+    _log("DEBUG: Set UV_NO_BUILD_ISOLATION=1 in prepare_metadata_for_build_editable")
+
+    return skbuild_prepare_metadata_for_build_editable(metadata_directory, config_settings=config_settings)
 
 
 __all__ = [

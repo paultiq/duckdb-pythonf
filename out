@@ -1,0 +1,110 @@
+Building wheel with cibuildwheel...
+CIBW_BUILD: cp314t-manylinux_x86_64
+CIBW_BUILD_FRONTEND: build[uv]; args: --no-isolation
+CIBW_ENVIRONMENT_LINUX: UV_NO_BUILD_ISOLATION=1 PYTHONPATH=/tmp/duckdb-build/backend:/project TMPDIR=/tmp/duckdb-build TEMP=/tmp/duckdb-build UV_CACHE_DIR=/tmp/duckdb-build/uv-cache UV_PROJECT_ENVIRONMENT=/project/.venv UV_PYTHON=cp314t
+
+     _ _       _ _   _       _           _
+ ___|_| |_ _ _|_| |_| |_ _ _| |_ ___ ___| |
+|  _| | . | | | | | . | | | |   | -_| -_| |
+|___|_|___|___|_|_|___|_____|_|_|___|___|_|
+
+cibuildwheel version 3.1.4
+
+Build options:
+  platform: linux
+  allow_empty: False
+  architectures: x86_64
+  build_selector: 
+    build_config: cp314t-manylinux_x86_64
+    skip_config: 
+    requires_python: >=3.9.0
+    enable: ['cpython-freethreading', 'cpython-prerelease']
+  output_dir: /home/ec2-user/git/duckdb-pythonf/wheelhouse
+  package_dir: /home/ec2-user/git/duckdb-pythonf
+  test_selector: 
+    skip_config: *
+  before_all: 
+  before_build: mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache && uv venv && uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10' && echo 'Installing duckdb_packaging without main build' && uv run python /project/setup_duckdb_packaging.py && echo 'Testing backend import' && uv run python -c 'import duckdb_packaging.build_backend; print("Backend import successful")'
+  before_test: 
+  build_frontend: 
+    name: build[uv]
+    args: ['--no-isolation']
+  build_verbosity: 3
+  config_settings: 
+  container_engine: docker
+  dependency_constraints: pinned
+  environment: 
+    UV_NO_BUILD_ISOLATION=1
+    PYTHONPATH=/tmp/duckdb-build/backend:/project
+    TMPDIR=/tmp/duckdb-build
+    TEMP=/tmp/duckdb-build
+    UV_CACHE_DIR=/tmp/duckdb-build/uv-cache
+    UV_PROJECT_ENVIRONMENT=/project/.venv
+    UV_PYTHON=cp314t
+  manylinux_images: 
+    x86_64: quay.io/pypa/manylinux_2_28_x86_64:2025.08.15-1
+    i686: quay.io/pypa/manylinux_2_28_i686:2025.08.15-1
+    pypy_x86_64: quay.io/pypa/manylinux_2_28_x86_64:2025.08.15-1
+    aarch64: quay.io/pypa/manylinux_2_28_aarch64:2025.08.15-1
+    ppc64le: quay.io/pypa/manylinux_2_28_ppc64le:2025.08.15-1
+    s390x: quay.io/pypa/manylinux_2_28_s390x:2025.08.15-1
+    armv7l: quay.io/pypa/manylinux_2_31_armv7l:2025.08.15-1
+    riscv64: quay.io/pypa/manylinux_2_39_riscv64:2025.08.15-1
+    pypy_aarch64: quay.io/pypa/manylinux_2_28_aarch64:2025.08.15-1
+    pypy_i686: quay.io/pypa/manylinux_2_28_i686:2025.08.15-1
+  musllinux_images: 
+    x86_64: quay.io/pypa/musllinux_1_2_x86_64:2025.08.15-1
+    i686: quay.io/pypa/musllinux_1_2_i686:2025.08.15-1
+    aarch64: quay.io/pypa/musllinux_1_2_aarch64:2025.08.15-1
+    ppc64le: quay.io/pypa/musllinux_1_2_ppc64le:2025.08.15-1
+    s390x: quay.io/pypa/musllinux_1_2_s390x:2025.08.15-1
+    armv7l: quay.io/pypa/musllinux_1_2_armv7l:2025.08.15-1
+    riscv64: quay.io/pypa/musllinux_1_2_riscv64:2025.08.15-1
+  pyodide_version: None
+  repair_command: auditwheel repair -w {dest_dir} {wheel}
+  test_command: 
+  test_environment: 
+  test_extras: 
+  test_groups: 
+  test_requires: 
+  test_sources: 
+  xbuild_tools: None
+
+Cache folder: /home/ec2-user/.cache/cibuildwheel
+
+Here we go!
+
+Starting container image quay.io/pypa/manylinux_2_28_x86_64:2025.08.15-1...
+
+info: This container will host the build for cp314t-manylinux_x86_64...
++ docker version -f '{{json .}}'
++ docker image inspect quay.io/pypa/manylinux_2_28_x86_64:2025.08.15-1 --format '{{.Os}}/{{.Architecture}}'
+90f74e4ed25cc7e872be996dbf7b768e9cfa82d7ba4515c1d94522ffbe3ff7dc
+    + /bin/true
+    + mkdir -p /project
+    + manylinux-interpreters --help
+    + manylinux-interpreters ensure cp314-cp314t
+'cp314-cp314t' already installed at '/opt/python/cp314-cp314t'
+
+                                                                       ✓ 3.16s
+Copying project into container...
+
+    + mkdir -p /project
+
+                                                                       ✓ 8.01s
+
+Building cp314t-manylinux_x86_64 wheel
+CPython 3.14t manylinux x86_64
+
+Setting up build environment...
+
+    + mkdir -p /
+    + /opt/python/cp39-cp39/bin/python -c 'import sys, json, os; json.dump(os.environ.copy(), sys.stdout)'
+    + which python
+    + which uv
+
+                                                                       ✓ 0.68s
+Running before_build...
+
+    + sh -c 'mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache && uv venv && uv pip install setuptools wheel scikit-build-core>=0.11.4 '"'"'pybind11[global]>=2.6.0'"'"' setuptools-scm>=8.0 '"'"'cmake>=3.29.0'"'"' '"'"'ninja>=1.10'"'"' && echo '"'"'Installing duckdb_packaging without main build'"'"' && uv run python /project/setup_duckdb_packaging.py && echo '"'"'Testing backend import'"'"' && uv run python -c '"'"'import duckdb_packaging.build_backend; print("Backend import successful")'"'"''
+Installing duckdb_packaging without main build
