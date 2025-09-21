@@ -126,7 +126,7 @@ jobs:
         env:
           CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
           CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
-          # CIBW_BUILD_FRONTEND: "build[uv]; args: --no-isolation"
+          CIBW_BUILD_FRONTEND: "build[uv]; args: --no-isolation"
           UV_PYTHON: ${{ matrix.python }}
           UV_PROJECT_ENVIRONMENT: /project/.venv
           PYTHONPATH: /project
@@ -179,26 +179,22 @@ jobs:
 
           CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PYTHON UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR
 
+          # Use pyproject.toml settings - remove overrides to let pyproject.toml before-build work
+          # Just install sccache since that's platform-specific and not in pyproject.toml
           CIBW_BEFORE_BUILD_LINUX: >
             mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
-            sccache --show-stats &&
-            uv venv &&
-            uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
+            sccache --show-stats
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
             cp -r /project /tmp/project &&
-            brew install sccache &&
-            uv venv &&
-            uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
+            brew install sccache
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
-            choco install sccache &&
-            uv venv &&
-            uv pip install setuptools wheel scikit-build-core>=0.11.4 "pybind11[global]>=2.6.0" setuptools-scm>=8.0 "cmake>=3.29.0" "ninja>=1.10"
+            choco install sccache
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
