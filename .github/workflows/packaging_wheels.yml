@@ -32,11 +32,11 @@ jobs:
       matrix:
         python: [ cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314, 
         platform:
-          #- { os: windows-2025,     arch: amd64,      cibw_system: win }
+          - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-24.04,     arch: x86_64,     cibw_system: manylinux }
           # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
           #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
-          #- { os: macos-26,         arch: arm64,      cibw_system: macosx }
+          - { os: macos-26,         arch: arm64,      cibw_system: macosx }
           # - { os: macos-15,         arch: universal2, cibw_system: macosx }
           # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
         minimal:
@@ -150,6 +150,11 @@ jobs:
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="C:/project"
             TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
+            UV_NO_BUILD_ISOLATION=1
+            PYTHONPATH="C:/project"
+            UV_CACHE_DIR="C:/tmp/duckdb-build/uv-cache"
+            UV_PROJECT_ENVIRONMENT="C:/project/.venv"
+            UV_PYTHON=cp314t
 
           CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PYTHON UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR
 
@@ -161,11 +166,11 @@ jobs:
             sccache --show-stats &&
             python -m pip install scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
           CIBW_BEFORE_BUILD_MACOS: >
-            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
+            mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
             brew install sccache &&
             python -m pip install scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
           CIBW_BEFORE_BUILD_WINDOWS: >
-            (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
+            (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache &&
             python -m pip install scikit-build-core>=0.11.4 "pybind11[global]>=2.6.0" setuptools-scm>=8.0 "cmake>=3.29.0" "ninja>=1.10"
