@@ -407,8 +407,9 @@ indent-style = "space"
 # (to some extent).
 ######################################################################################################
 [tool.cibuildwheel]
-build-frontend = { name = "build[uv]", args = ["--no-isolation"] }
+build-frontend = "build[uv]"
 before-build = "uv sync --no-install-project && uv pip install 'pybind11[global]>=2.6.0'"
+environment = { UV_NO_BUILD_ISOLATION = "1", PYTHONPATH = "/project" }
 
 manylinux-x86_64-image = "manylinux_2_28"
 manylinux-pypy_x86_64-image = "manylinux_2_28"
