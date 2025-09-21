@@ -163,19 +163,19 @@ jobs:
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
             sccache --show-stats &&
-            # Build dependencies installs needed if using no-isolation
-            # uv pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
+          # Build dependencies installs needed if using no-isolation
+          # uv pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
-            # Build dependencies installs needed if using no-isolation
-            # uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
             brew install sccache
+          # Build dependencies installs needed if using no-isolation
+          # uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
-            # Build dependencies installs needed if using no-isolation
-            # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10" &&
             choco install sccache
+          # Build dependencies installs needed if using no-isolation
+          # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10" &&
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
