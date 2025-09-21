@@ -156,6 +156,16 @@ jobs:
             UV_CACHE_DIR="/tmp/duckdb-build/uv-cache"
             UV_PROJECT_ENVIRONMENT="/project/.venv"
             UV_PYTHON=cp314t
+          CIBW_ENVIRONMENT_MACOS: >
+            CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
+            CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
+            SCCACHE_BASEDIR="/tmp/project"
+            TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
+            UV_NO_BUILD_ISOLATION=1
+            PYTHONPATH="/tmp/project"
+            UV_CACHE_DIR="/tmp/duckdb-build/uv-cache"
+            UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv"
+            UV_PYTHON=cp314t
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_BUILD_TYPE=Release CMAKE_C_COMPILER_LAUNCHER="" CMAKE_CXX_COMPILER_LAUNCHER=""
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
@@ -176,21 +186,19 @@ jobs:
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
             sccache --show-stats &&
             uv venv &&
-            uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10' &&
-            uv pip install -e /project --no-deps
+            uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
+            cp -r /project /tmp/project &&
             brew install sccache &&
             uv venv &&
-            uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10' &&
-            uv pip install -e /project --no-deps
+            uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache &&
             uv venv &&
-            uv pip install setuptools wheel scikit-build-core>=0.11.4 "pybind11[global]>=2.6.0" setuptools-scm>=8.0 "cmake>=3.29.0" "ninja>=1.10" &&
-            uv pip install -e /project --no-deps
+            uv pip install setuptools wheel scikit-build-core>=0.11.4 "pybind11[global]>=2.6.0" setuptools-scm>=8.0 "cmake>=3.29.0" "ninja>=1.10"
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
