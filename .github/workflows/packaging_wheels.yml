@@ -206,7 +206,7 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
             echo "Installing build dependencies..." &&
-            pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
+            python -m pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
             brew install sccache
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
