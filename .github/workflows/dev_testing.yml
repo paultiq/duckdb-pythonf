@@ -105,7 +105,7 @@ jobs:
 
       # Load MSVC environment, needed for Windows - ninja builds
       - uses: ilammy/msvc-dev-cmd@v1
-        if: ${{ matrix.python == 'cp314t' && matrix.platform.cibw_system == 'win' }}
+        if: ${{ matrix.platform.cibw_system == 'win' }}
         with:
           arch: ${{ matrix.platform.arch }}
 
