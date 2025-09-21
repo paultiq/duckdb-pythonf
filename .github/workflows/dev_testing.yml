@@ -39,8 +39,8 @@ jobs:
         uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
         uv pip install -r pylock.toml
       CIBW_TEST_COMMAND: >
-        uv run -v pytest ./tests/fast --verbose --ignore=./tests/stubs --durations=5 -n 2 &&
-      # uv run -v pytest ./tests/fast/threading --durations=5 --parallel-threads=10 --iterations=5 -n 2
+        uv run -v pytest ./tests/fast --verbose --ignore=./tests/stubs --durations=5 -n 2
+      #  && uv run -v pytest ./tests/fast/threading --durations=5 --parallel-threads=10 --iterations=5 -n 2
 
       CMAKE_VERBOSE_MAKEFILE: "ON"
 
