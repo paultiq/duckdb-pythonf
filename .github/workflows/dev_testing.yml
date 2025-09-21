@@ -10,13 +10,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
+        python: [ cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
         platform:
-          # - { os: windows-2025,     arch: amd64,      cibw_system: win }
+          - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-latest,     arch: x86_64,     cibw_system: manylinux }
           # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
           #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
-          # - { os: macos-26,         arch: arm64,      cibw_system: macosx }
+          - { os: macos-26,         arch: arm64,      cibw_system: macosx }
           # - { os: macos-15,         arch: universal2, cibw_system: macosx }
           # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
 
@@ -124,6 +124,7 @@ jobs:
           CFLAGS: "-Wno-attributes" 
           CXXFLAGS: "-Wno-attributes"
           UV_PYTHON: ${{ matrix.python }}
+          PYTHON_GIL: 1
           # SCCACHE Notes:
           # - Without the /project dir and tmpdirs (not sure exactly which mattered), the python environment is installed to a random tmp dir, which breaks
           # the cache key... so, only the external/duckdb would cache, and not the project itself
@@ -164,7 +165,7 @@ jobs:
             TEMP="/tmp/duckdb-build"
             UV_PROJECT_ENVIRONMENT="/project/.venv"
 
-          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR UV_PYTHON CFLAGS CXXFLAGS CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER CMAKE_VERBOSE_MAKEFILE CIBW_BUILD_FRONTEND
+          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR UV_PYTHON CFLAGS CXXFLAGS CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER CMAKE_VERBOSE_MAKEFILE CIBW_BUILD_FRONTEND PYTHON_GIL
 
           CIBW_BEFORE_BUILD_LINUX: >
             if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
