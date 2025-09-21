@@ -175,16 +175,19 @@ jobs:
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
             sccache --show-stats &&
+            uv venv &&
             uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
             brew install sccache &&
+            uv venv &&
             uv pip install setuptools wheel scikit-build-core>=0.11.4 'pybind11[global]>=2.6.0' setuptools-scm>=8.0 'cmake>=3.29.0' 'ninja>=1.10'
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache &&
-            python -m pip install scikit-build-core>=0.11.4 "pybind11[global]>=2.6.0" setuptools-scm>=8.0 "cmake>=3.29.0" "ninja>=1.10"
+            uv venv &&
+            uv pip install setuptools wheel scikit-build-core>=0.11.4 "pybind11[global]>=2.6.0" setuptools-scm>=8.0 "cmake>=3.29.0" "ninja>=1.10"
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
