@@ -161,7 +161,7 @@ jobs:
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="/tmp/duckdb-build"
             TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
-            UV_NO_BUILD_ISOLATION=1
+            UV_NO_BUILD_ISOLATION="true"
             PYTHONPATH="/project"
             UV_CACHE_DIR="/tmp/duckdb-build/uv-cache"
             UV_PROJECT_ENVIRONMENT="/project/.venv"
@@ -171,7 +171,7 @@ jobs:
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="/tmp/duckdb-build"
             TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
-            UV_NO_BUILD_ISOLATION=1
+            UV_NO_BUILD_ISOLATION="true"
             PYTHONPATH="."
             UV_CACHE_DIR="/tmp/duckdb-build/uv-cache"
             UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv"
@@ -181,7 +181,7 @@ jobs:
             CFLAGS="-Wno-attributes" CXXFLAGS="-Wno-attributes"
             SCCACHE_BASEDIR="/tmp/duckdb-build"
             TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
-            UV_NO_BUILD_ISOLATION=1
+            UV_NO_BUILD_ISOLATION="true"
             PYTHONPATH="."
             UV_CACHE_DIR="C:/tmp/duckdb-build/uv-cache"
             UV_PROJECT_ENVIRONMENT="C:/project/.venv"
