@@ -121,7 +121,7 @@ cmake.build-type = "Debug"
 if.state = "editable"
 if.env.COVERAGE = false
 inherit.cmake.define = "append"
-cmake.define.DISABLE_UNITY = "1"
+# cmake.define.DISABLE_UNITY = "1"
 
 [tool.scikit-build.sdist]
 include = [
@@ -228,6 +228,7 @@ test = [ # dependencies used for running tests
     "pytest-reraise",
     "pytest-timeout",
     "pytest-run-parallel",
+    "pytest-xdist",
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
@@ -381,12 +382,3 @@ manylinux-pypy_x86_64-image = "manylinux_2_28"
 manylinux-aarch64-image = "manylinux_2_28"
 manylinux-pypy_aarch64-image = "manylinux_2_28"
 enable = ["cpython-freethreading", "cpython-prerelease"]
-
-[tool.cibuildwheel.linux]
-before-build = ["yum install -y ccache"]
-
-[tool.cibuildwheel.macos]
-before-build = ["brew install ccache"]
-
-[tool.cibuildwheel.windows]
-before-build = ["choco install ccache"]
