@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: [ cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
+        python: [ cp39, cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
         platform:
           - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-latest,     arch: x86_64,     cibw_system: manylinux }
@@ -159,6 +159,8 @@ jobs:
             PYTHONPATH="."
           CIBW_ENVIRONMENT_MACOS: >
             PYTHONPATH="."
+            TMPDIR="C:/tmp/duckdb-build" 
+            TEMP="C:/tmp/duckdb-build"
           CIBW_ENVIRONMENT_LINUX: >
             PYTHONPATH="/project"
             TMPDIR="/tmp/duckdb-build" 
