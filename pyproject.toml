@@ -228,6 +228,8 @@ test = [ # dependencies used for running tests
     "pytest",
     "pytest-reraise",
     "pytest-timeout",
+    "pytest-xdist",
+    "pytest-randomly",
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
