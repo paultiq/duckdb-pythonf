@@ -200,6 +200,9 @@ jobs:
             . $VIRTUAL_ENV/bin/activate &&
             echo "Python location: $(which python)" &&
             echo "CMAKE_ARGS: $CMAKE_ARGS" &&
+            echo "PATH: $PATH" &&
+            which python &&
+            ls -la /tmp/duckdb-build/stable-venv/bin/python &&
             uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10'
 
           # Build dependencies installs needed if using no-isolation
