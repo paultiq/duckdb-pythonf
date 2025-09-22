@@ -104,12 +104,12 @@ jobs:
       - name: Install sccache
         if: ${{ matrix.platform.cibw_system == 'win' }}
         shell: bash
+        # TODO: Find a better PATH dir to put this in
         run: |
           curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-pc-windows-msvc.zip -o sccache.zip
           unzip sccache.zip
-          cp sccache-*/sccache.exe .
-          echo "$PWD" >> $GITHUB_PATH
-          ./sccache.exe --version
+          cp sccache-*/sccache.exe "C:/Strawberry/c/bin/sccache.exe"
+          sccache --version
           
       # Load MSVC environment, needed for Windows - ninja builds
       - uses: ilammy/msvc-dev-cmd@v1
