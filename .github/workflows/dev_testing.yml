@@ -157,10 +157,13 @@ jobs:
           CIBW_ENVIRONMENT_WINDOWS: >
             CMAKE_BUILD_TYPE=Release
             PYTHONPATH="."
-          CIBW_ENVIRONMENT_MACOS: >
-            PYTHONPATH="."
             TMPDIR="C:/tmp/duckdb-build" 
             TEMP="C:/tmp/duckdb-build"
+          CIBW_ENVIRONMENT_MACOS: >
+            PYTHONPATH="."
+            TMPDIR="/tmp/duckdb-build" 
+            TEMP="/tmp/duckdb-build"
+            
           CIBW_ENVIRONMENT_LINUX: >
             PYTHONPATH="/project"
             TMPDIR="/tmp/duckdb-build" 
