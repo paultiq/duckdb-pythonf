@@ -191,19 +191,8 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
             brew install sccache &&
-            echo "Original VIRTUAL_ENV: $VIRTUAL_ENV" &&
             rm -f /tmp/duckdb-build/stable-venv &&
             ln -sf "$VIRTUAL_ENV" /tmp/duckdb-build/stable-venv &&
-            export VIRTUAL_ENV="/tmp/duckdb-build/stable-venv" &&
-            export PATH="/tmp/duckdb-build/stable-venv/bin:$PATH" &&
-            export CMAKE_ARGS="${CMAKE_ARGS} -DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DPython_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DCMAKE_PREFIX_PATH=/tmp/duckdb-build/stable-venv" &&
-            echo "New VIRTUAL_ENV: $VIRTUAL_ENV" &&
-            . $VIRTUAL_ENV/bin/activate &&
-            echo "Python location: $(which python)" &&
-            echo "CMAKE_ARGS: $CMAKE_ARGS" &&
-            echo "PATH: $PATH" &&
-            which python &&
-            ls -la /tmp/duckdb-build/stable-venv/bin/python &&
             uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10'
 
           # Build dependencies installs needed if using no-isolation
