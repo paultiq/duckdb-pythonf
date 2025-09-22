@@ -12,11 +12,11 @@ jobs:
       matrix:
         python: [ cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
         platform:
-          #- { os: windows-2025,     arch: amd64,      cibw_system: win }
+          - { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-latest,     arch: x86_64,     cibw_system: manylinux }
           # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
           #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
-          #- { os: macos-26,         arch: arm64,      cibw_system: macosx }
+          - { os: macos-26,         arch: arm64,      cibw_system: macosx }
           # - { os: macos-15,         arch: universal2, cibw_system: macosx }
           # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
 
@@ -160,7 +160,6 @@ jobs:
             PYTHONPATH="."
             TMPDIR="C:/tmp/duckdb-build"
             TEMP="C:/tmp/duckdb-build"
-            PATH="C:/tmp/duckdb-build/stable-venv/Scripts;%PATH%"
             CMAKE_ARGS="-DPython3_EXECUTABLE=C:/tmp/duckdb-build/stable-venv/Scripts/python.exe -DPython_EXECUTABLE=C:/tmp/duckdb-build/stable-venv/Scripts/python.exe -DCMAKE_PREFIX_PATH=C:/tmp/duckdb-build/stable-venv"
           CIBW_ENVIRONMENT_MACOS: >
             PYTHONPATH="."
