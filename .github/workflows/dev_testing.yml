@@ -101,6 +101,29 @@ jobs:
           export PATH="$HOME/.local/bin:$PATH"
           uv --version
 
+      - name: sccache zip (cache)
+        if: ${{ matrix.platform.cibw_system == 'win' }}
+        uses: actions/cache@v4
+        with:
+          path: ~\sccache_dls
+          key: ${{ runner.os }}-sccache-zip-v0.10.0
+
+      - name: Download & install sccache
+        if: ${{ matrix.platform.cibw_system == 'win' }}
+        shell: pwsh
+        run: |
+          $cacheDir = "$env:USERPROFILE\sccache_dls"
+          New-Item -ItemType Directory -Force -Path $cacheDir | Out-Null
+          $zip = Join-Path $cacheDir "sccache-v0.10.0-x86_64-pc-windows-msvc.zip"
+          if (!(Test-Path $zip)) { Invoke-WebRequest -Uri https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-pc-windows-msvc.zip -OutFile $zip }
+          $inst = "$env:USERPROFILE\sccache"
+          Remove-Item $inst -Recurse -Force -ErrorAction SilentlyContinue
+          Expand-Archive -Path $zip -DestinationPath $inst -Force
+          $exe = Get-ChildItem -Path $inst -Recurse -Filter sccache.exe | Select-Object -First 1
+          if ($exe.DirectoryName -ne $inst) { Move-Item $exe.FullName (Join-Path $inst "sccache.exe") -Force }
+          Add-Content -Path $env:GITHUB_PATH -Value $inst
+          sccache --version
+          
       # Load MSVC environment, needed for Windows - ninja builds
       - uses: ilammy/msvc-dev-cmd@v1
         if: ${{ matrix.platform.cibw_system == 'win' }}
@@ -195,10 +218,10 @@ jobs:
           CIBW_BEFORE_BUILD_WINDOWS: >
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
-            choco install sccache &&
             mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%" &&
             call "C:\tmp\duckdb-build\stable-venv\Scripts\activate.bat" &&
             uv pip install "pybind11[global]>=2.6.0"
+          #choco install sccache &&
             
           # &&
           # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
