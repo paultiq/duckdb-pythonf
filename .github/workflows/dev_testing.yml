@@ -199,7 +199,7 @@ jobs:
             pip install "pybind11[global]>=2.6.0" &&
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
-            choco install sccache &&
+            choco install sccache
             
           # &&
           # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
