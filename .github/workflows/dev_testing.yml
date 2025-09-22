@@ -183,7 +183,7 @@ jobs:
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
             sccache --show-stats &&
 
-            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
+            mkdir -p /tmp/duckdb-build /tmp/pip-cache
             # uv pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
             # python -c "import sys; print('Python path:', sys.path); import duckdb_packaging.build_backend; print('Import successful')"
           # mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
