@@ -189,6 +189,10 @@ jobs:
           CIBW_BEFORE_BUILD_MACOS: >
             mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
             brew install sccache &&
+            TEMP_BASE=$(echo "$VIRTUAL_ENV" | sed 's|/[^/]*/build/venv$||') &&
+            export CFLAGS="${CFLAGS} -fdebug-prefix-map=${TEMP_BASE}=/tmp/stable" &&
+            export CXXFLAGS="${CXXFLAGS} -fdebug-prefix-map=${TEMP_BASE}=/tmp/stable" &&
+            echo "Normalizing temp path: ${TEMP_BASE} -> /tmp/stable" &&
             uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10'
           # Build dependencies installs needed if using no-isolation
           # uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
