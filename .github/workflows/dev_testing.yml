@@ -195,9 +195,11 @@ jobs:
             export CMAKE_C_FLAGS="${CMAKE_C_FLAGS} -fdebug-prefix-map=${TEMP_BASE}=/tmp/stable" &&
             export CMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -fdebug-prefix-map=${TEMP_BASE}=/tmp/stable" &&
             echo "Normalizing temp path: ${TEMP_BASE} -> /tmp/stable" &&
-            uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
-            export CMAKE_CXX_COMPILER_LAUNCHER = "coaosidj" &&
-            export CMAKE_C_COMPILER_LAUNCHER = "asdasd"
+            echo "CFLAGS: $CFLAGS" &&
+            echo "CXXFLAGS: $CXXFLAGS" &&
+            echo "CMAKE_C_FLAGS: $CMAKE_C_FLAGS" &&
+            echo "CMAKE_CXX_FLAGS: $CMAKE_CXX_FLAGS" &&
+            uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10'
 
           # Build dependencies installs needed if using no-isolation
           # uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
