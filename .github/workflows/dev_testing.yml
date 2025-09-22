@@ -163,7 +163,7 @@ jobs:
           # TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
           # UV_PROJECT_ENVIRONMENT="C:/project/.venv"
           CIBW_ENVIRONMENT_WINDOWS: >
-            CMAKE_BUILD_TYPE=Release
+            CMAKE_BUILD_TYPE=RelWithDebInfo
             PYTHONPATH="."
             TMPDIR="C:/tmp/duckdb-build"
             TEMP="C:/tmp/duckdb-build"
