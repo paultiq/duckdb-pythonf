@@ -81,9 +81,6 @@ packages.duckdb = "duckdb"
 
 [tool.scikit-build.cmake.define]
 CORE_EXTENSIONS = "core_functions;json;parquet;icu;jemalloc"
-Python3_EXECUTABLE = "/tmp/duckdb-build/stable-venv/bin/python"
-Python_EXECUTABLE = "/tmp/duckdb-build/stable-venv/bin/python"
-CMAKE_PREFIX_PATH = "/tmp/duckdb-build/stable-venv"
 
 [tool.setuptools_scm]
 version_scheme = "duckdb_packaging.setuptools_scm_version:version_scheme"
