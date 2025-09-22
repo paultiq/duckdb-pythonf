@@ -195,7 +195,7 @@ jobs:
             export VIRTUAL_ENV="/tmp/duckdb-build/stable-venv" &&
             export PATH="/tmp/duckdb-build/stable-venv/bin:$PATH" &&
             echo "New VIRTUAL_ENV: $VIRTUAL_ENV" &&
-            . $VIRTUAL_ENV/bin/activate
+            . $VIRTUAL_ENV/bin/activate &&
             echo "Python location: $(which python)" &&
             uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10'
 
