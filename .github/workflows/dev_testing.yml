@@ -171,9 +171,10 @@ jobs:
             CMAKE_ARGS="-DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DPython_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DCMAKE_PREFIX_PATH=/tmp/duckdb-build/stable-venv"
           CIBW_ENVIRONMENT_LINUX: >
             PYTHONPATH="/project"
-            TMPDIR="/tmp/duckdb-build" 
+            TMPDIR="/tmp/duckdb-build"
             TEMP="/tmp/duckdb-build"
             UV_PROJECT_ENVIRONMENT="/project/.venv"
+            CMAKE_ARGS="-DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DPython_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DCMAKE_PREFIX_PATH=/tmp/duckdb-build/stable-venv"
 
           CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR UV_PYTHON CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER CMAKE_VERBOSE_MAKEFILE CIBW_BUILD_FRONTEND PYTHON_GIL CIBW_BUILD_VERBOSITY CIBW_BUILD_DIR VIRTUAL_ENV CMAKE_ARGS
 
@@ -182,8 +183,8 @@ jobs:
             curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
             cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
             sccache --show-stats &&
-
-            mkdir -p /tmp/duckdb-build /tmp/pip-cache
+            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
+            ln -sf "$VIRTUAL_ENV" /tmp/duckdb-build/stable-venv
             # uv pip install --system scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
             # python -c "import sys; print('Python path:', sys.path); import duckdb_packaging.build_backend; print('Import successful')"
           # mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
@@ -203,8 +204,9 @@ jobs:
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache &&
             if exist "C:\tmp\duckdb-build\stable-venv" rmdir /s /q "C:\tmp\duckdb-build\stable-venv" &&
-            mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%" &&
-            uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
+            mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%"
+          # &&
+          # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
       - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
