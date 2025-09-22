@@ -149,12 +149,10 @@ cmake.args = [
 if.platform-system = "^win32"
 if.abi-flags = "t"
 inherit.cmake.define = "append"
-# If DEBUG w/ sccache
-# cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-# cmake.define.CMAKE_C_FLAGS="/Z7"
-# cmake.define.CMAKE_CXX_FLAGS="/Z7"
-cmake.define.CMAKE_C_FLAGS="/DPy_GIL_DISABLED"
-cmake.define.CMAKE_CXX_FLAGS="/DPy_GIL_DISABLED"
+cmake.build-type = "RelWithDebInfo"
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_GIL_DISABLED"
 # /DPy_MOD_GIL_NOT_USED 
 [tool.scikit-build.sdist]
 include = [
