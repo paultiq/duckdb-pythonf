@@ -167,6 +167,7 @@ jobs:
             UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv"
             CIBW_BUILD_DIR="/tmp/duckdb-build/build"
             PATH="/tmp/duckdb-build/stable-venv/bin:$PATH"
+            CMAKE_ARGS="-DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DPython_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DCMAKE_PREFIX_PATH=/tmp/duckdb-build/stable-venv"
           CIBW_ENVIRONMENT_LINUX: >
             PYTHONPATH="/project"
             TMPDIR="/tmp/duckdb-build" 
