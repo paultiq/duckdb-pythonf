@@ -151,14 +151,14 @@ if.abi-flags = "t"
 inherit.cmake.define = "append"
 # cmake.build-type = "RelWithDebInfo"
 cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_GIL_DISABLED"
-cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_GIL_DISABLED"
+cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 # /DPy_MOD_GIL_NOT_USED 
 
 [[tool.scikit-build.overrides]]
 if.platform-system = "^win32"
 if.abi-flags = "t"
-cmake.verbose = true  # This might show more build info
+# cmake.verbose = true  # This might show more build info
 cmake.build-type = "RelWithDebInfo"
 
 [tool.scikit-build.sdist]
