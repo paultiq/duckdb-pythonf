@@ -197,7 +197,8 @@ jobs:
             del "C:\Strawberry\c\bin\ccache.exe" &&
             choco install sccache &&
             if exist "C:\tmp\duckdb-build\stable-venv" rmdir /s /q "C:\tmp\duckdb-build\stable-venv" &&
-            mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%"
+            mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%" &&
+            C:\tmp\duckdb-build\stable-venv\Scripts\python.exe -m pip install "pybind11[global]>=2.6.0"
           # &&
           # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
       - name: Upload wheel
