@@ -193,13 +193,12 @@ jobs:
           # Build dependencies installs needed if using no-isolation
           # uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
           CIBW_BEFORE_BUILD_WINDOWS: >
-            if exist "C:\tmp\duckdb-build\stable-venv" rmdir /s /q "C:\tmp\duckdb-build\stable-venv" &&
-            mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%" &&
-            call "C:\tmp\duckdb-build\stable-venv\Scripts\activate.bat" &&
-            uv pip install "pybind11[global]>=2.6.0" &&
             (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
             del "C:\Strawberry\c\bin\ccache.exe" &&
-            choco install sccache
+            choco install sccache &&
+            mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%" &&
+            call "C:\tmp\duckdb-build\stable-venv\Scripts\activate.bat" &&
+            uv pip install "pybind11[global]>=2.6.0"
             
           # &&
           # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
