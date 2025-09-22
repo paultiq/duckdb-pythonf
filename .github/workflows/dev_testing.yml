@@ -194,7 +194,8 @@ jobs:
             rm -f /tmp/duckdb-build/stable-venv &&
             ln -sf "$VIRTUAL_ENV" /tmp/duckdb-build/stable-venv &&
             export VIRTUAL_ENV="/tmp/duckdb-build/stable-venv" &&
-            export PATH="/tmp/duckdb-build/stable-venv/bin:$PATH" &&
+            ORIGINAL_VENV_BIN="$(dirname $(which python))" &&
+            export PATH="/tmp/duckdb-build/stable-venv/bin:$(echo $PATH | sed "s|${ORIGINAL_VENV_BIN}:||g")" &&
             export CMAKE_ARGS="${CMAKE_ARGS} -DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python" &&
             echo "New VIRTUAL_ENV: $VIRTUAL_ENV" &&
             . $VIRTUAL_ENV/bin/activate &&
