@@ -390,7 +390,8 @@ before-build = ["brew install ccache"]
 # Override for Windows: Enable verbose MSBuild logging
 [[tool.scikit-build.overrides]]
 if.platform-system = "^win32"
-cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /verbosity:diagnostic"
+cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
+cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /verbosity:diagnostic /property:UseCommandLineEcho=true"
 
 [tool.cibuildwheel.windows]
 before-build = ["choco install ccache"]
