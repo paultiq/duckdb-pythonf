@@ -19,8 +19,8 @@ jobs:
           - { os: macos-26,         arch: arm64,      cibw_system: macosx }
           # - { os: macos-15,         arch: universal2, cibw_system: macosx }
           # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
-        exclude:
-          - { python: cp314t, platform: { os: windows-2025 } }  
+        #exclude:
+        #  - { python: cp314t, platform: { os: windows-2025 } }  
 
     runs-on: ${{ matrix.platform.os }}
     env:

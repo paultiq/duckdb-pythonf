@@ -149,9 +149,11 @@ if.platform-system = "^win32"
 if.abi-flags = "t"
 inherit.cmake.define = "append"
 # cmake.build-type = "RelWithDebInfo"
+# /EHsc: Solution for many of the crashes observed on windows
+# /Z7 / Embedded: Needed for sccache
 cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-cmake.define.CMAKE_C_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
-cmake.define.CMAKE_CXX_FLAGS="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_C_FLAGS="/EHsc /Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS="/EHsc /Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 # /DPy_MOD_GIL_NOT_USED 
 
 [[tool.scikit-build.overrides]]
