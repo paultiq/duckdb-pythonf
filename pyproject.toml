@@ -140,8 +140,8 @@ cmake.args = [
    "--log-level=DEBUG",
 ]
 cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-cmake.define.CMAKE_C_FLAGS="/Z7"
-cmake.define.CMAKE_CXX_FLAGS="/Z7"
+cmake.define.CMAKE_C_FLAGS="/EHsc /Z7"
+cmake.define.CMAKE_CXX_FLAGS="/EHsc /Z7"
 
 [[tool.scikit-build.overrides]]
 # Windows Free-Threading
