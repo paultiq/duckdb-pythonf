@@ -387,5 +387,10 @@ before-build = ["yum install -y ccache"]
 [tool.cibuildwheel.macos]
 before-build = ["brew install ccache"]
 
+# Override for Windows: Enable verbose MSBuild logging
+[[tool.scikit-build.overrides]]
+if.platform-system = "^win32"
+cmake.define.CMAKE_VS_MSBUILD_COMMAND = "msbuild.exe /verbosity:diagnostic"
+
 [tool.cibuildwheel.windows]
 before-build = ["choco install ccache"]
