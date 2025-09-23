@@ -159,8 +159,8 @@ cmake.define.CMAKE_CXX_FLAGS="/EHsc /Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 [[tool.scikit-build.overrides]]
 if.platform-system = "^win32"
 if.abi-flags = "t"
-# cmake.verbose = true  # This might show more build info
-cmake.build-type = "RelWithDebInfo"
+#cmake.verbose = true  # This might show more build info
+cmake.build-type = "Release"
 
 [tool.scikit-build.sdist]
 include = [
