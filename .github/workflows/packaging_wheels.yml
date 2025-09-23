@@ -47,7 +47,7 @@ jobs:
           - { minimal: true, platform: { arch: universal2 } }
           # Windows+cp314t disabled due to test failures in CI. 
           # TODO: Diagnose why tests fail (access violations) in some configurations
-          - { python: cp314t, platform: { os: windows-2025 } }  
+          #- { python: cp314t, platform: { os: windows-2025 } }  
 
     runs-on: ${{ matrix.platform.os }}
     env:
