@@ -75,6 +75,7 @@ ninja.make-fallback = false
 build.tool-args = ["-v", "-d", "stats"]
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
 # build-dir = "/tmp/duckdb-build/cmake-build"
+# build.tool-args = ["-v", "-d", "stats"]
 
 [tool.scikit-build.wheel]
 cmake = true
@@ -151,6 +152,37 @@ if.abi-flags = "t"
 inherit.cmake.define = "append"
 cmake.define.CMAKE_C_FLAGS="/DPy_MOD_GIL_NOT_USED /DPy_GIL_DISABLED"
 cmake.define.CMAKE_CXX_FLAGS="/DPy_MOD_GIL_NOT_USED /DPy_GIL_DISABLED"
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "^win32"
+inherit.cmake.define = "append"
+cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
+cmake.define.CMAKE_C_FLAGS_INIT="/Z7"
+cmake.define.CMAKE_CXX_FLAGS_INIT="/Z7"
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+#build.tool-args = ["/m:4"]
+cmake.args = [
+    "-G", "Ninja",
+    "--log-level=DEBUG",
+    "-DCMAKE_BUILD_TYPE=Release"
+]
+
+[[tool.scikit-build.overrides]]
+# Windows Free-Threading
+if.platform-system = "^win32"
+if.abi-flags = "t"
+inherit.cmake.define = "append"
+# cmake.build-type = "RelWithDebInfo"
+# /EHsc: Solution for many of the crashes observed on windows
+# /Z7 / Embedded: Needed for sccache
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+cmake.define.CMAKE_C_FLAGS_INIT="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS_INIT="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+
+#build.tool-args = ["/m:4"]
+#, "/verbosity:diagnostic", "/property:UseCommandLineEcho=true"]
+
+# for msbuild
 
 [tool.scikit-build.sdist]
 include = [

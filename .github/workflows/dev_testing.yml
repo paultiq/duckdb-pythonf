@@ -1,0 +1,223 @@
+name: On Push Fast Tests
+on: push
+
+# This workflow is runnable locally for debugging:
+# using https://github.com/nektos/act
+# 
+jobs:
+  build_wheels:
+    name: 'Wheel: ${{ matrix.python }}-${{ matrix.platform.os }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}'
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [ cp39, cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
+        platform:
+          - { os: windows-2025,     arch: amd64,      cibw_system: win }
+          - { os: ubuntu-latest,     arch: x86_64,     cibw_system: manylinux }
+          # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
+          #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
+          - { os: macos-26,         arch: arm64,      cibw_system: macosx }
+          # - { os: macos-15,         arch: universal2, cibw_system: macosx }
+          # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
+        #exclude:
+        #  - { python: cp314t, platform: { os: windows-2025 } }  
+
+    runs-on: ${{ matrix.platform.os }}
+    env:
+      CIBW_TEST_SOURCES: tests
+      CIBW_BEFORE_TEST_LINUX: >
+        sccache --show-stats &&
+        uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
+        uv pip install -r pylock.toml
+      CIBW_BEFORE_TEST_MACOS: >
+        sccache --show-stats &&
+        uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
+        uv pip install -r pylock.toml
+      CIBW_BEFORE_TEST_WINDOWS: >
+        sccache --show-stats &&
+        uv export --only-group test --no-emit-project --output-file pylock.toml --directory {project} --quiet &&
+        uv pip install -r pylock.toml
+      CIBW_TEST_COMMAND: >
+        uv run -v pytest ./tests/fast --verbose --ignore=./tests/stubs --durations=5 -n 2
+      #  && uv run -v pytest ./tests/fast/threading --durations=5 --parallel-threads=10 --iterations=5 -n 2
+
+      CMAKE_VERBOSE_MAKEFILE: "ON"
+
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: ${{ toJSON(matrix) }}
+      SCCACHE_BASEDIR: "/tmp/duckdb-build"
+      ACTIONS_CACHE_SERVICE_V2: "1"
+
+      TMPDIR: "/tmp/duckdb-build"
+      TEMP: "/tmp/duckdb-build"  
+    steps:
+      - name: Set SCCACHE_GHA_ENABLED
+        run: echo "SCCACHE_GHA_ENABLED=${{ env.ACT == 'true' && 'off' || 'on' }}" >> $GITHUB_ENV
+
+      - name: Checkout DuckDB Python
+        if: ${{ env.ACT != 'true' }}
+        uses: actions/checkout@v5
+        with:
+          # ref: ${{ inputs.duckdb-python-sha }}
+          fetch-depth: 0
+          submodules: true
+      - name: Checkout DuckDB
+        if: ${{ env.ACT != 'true' && inputs['duckdb-sha'] != '' }}
+        shell: bash
+        continue-on-error: true  # sometimes helpful when merging branch->branch
+        run: |
+          cd external/duckdb
+          git fetch origin
+          git checkout ${{ inputs.duckdb-sha }}
+      - name: Configure Cache Env
+        if: ${{ env.ACT != 'true' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            core.exportVariable('ACTIONS_RESULTS_URL', process.env.ACTIONS_RESULTS_URL || '');
+            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+      # Make sure that OVERRIDE_GIT_DESCRIBE is propagated to cibuildwhel's env, also when it's running linux builds
+      - name: Set OVERRIDE_GIT_DESCRIBE
+        shell: bash
+        if: ${{ inputs.set-version != '' }}
+        run: echo "CIBW_ENVIRONMENT=OVERRIDE_GIT_DESCRIBE=${{ inputs.set-version }}" >> $GITHUB_ENV
+
+      # # Install Astral UV, which will be used as build-frontend for cibuildwheel
+      - uses: astral-sh/setup-uv@v6
+        if: ${{ env.ACT != 'true' }}
+        with:
+          # version: "0.8.19"  # Version is important - it determines which Python build you get. Bump when new version of Python releases. 
+          enable-cache: false
+          activate-environment: true
+          cache-suffix: -${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          python-version: ${{ matrix.python }}
+
+      # Used when running workflows locally
+      - name: Install UV
+        if: ${{ env.ACT == 'true' }}
+        shell: bash
+        env:
+          TMPDIR: /tmp
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          export PATH="$HOME/.local/bin:$PATH"
+          uv --version
+
+      - name: Install sccache
+        if: ${{ matrix.platform.cibw_system == 'win' }}
+        shell: bash
+        # TODO: Find a better PATH dir to put this in
+        run: |
+          curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-pc-windows-msvc.zip -o sccache.zip
+          unzip sccache.zip
+          cp sccache-*/sccache.exe "C:/Strawberry/c/bin/sccache.exe"
+          sccache --version
+          
+      # Load MSVC environment, needed for Windows - ninja builds
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: ${{ matrix.platform.cibw_system == 'win' }}
+        with:
+          arch: ${{ matrix.platform.arch }}
+
+      - name: Build${{ inputs.testsuite != 'none' && ' and test ' || ' ' }}wheels
+        uses: pypa/cibuildwheel@v3.2
+        env:
+          CIBW_ARCHS: ${{ matrix.platform.arch == 'amd64' && 'AMD64' || matrix.platform.arch }}
+          CIBW_BUILD: ${{ matrix.python }}-${{ matrix.platform.cibw_system }}_${{ matrix.platform.arch }}
+          
+          #CIBW_BUILD_FRONTEND: "build[uv]; args: --no-isolation"
+          UV_PROJECT_ENVIRONMENT: /project/.venv
+          #UV_NO_BUILD_ISOLATION: "true"
+          CMAKE_C_COMPILER_LAUNCHER: ""
+          CMAKE_CXX_COMPILER_LAUNCHER: ""
+          # CFLAGS: "-Wno-attributes" 
+          # CXXFLAGS: "-Wno-attributes"
+          # UV_PYTHON: ${{ matrix.python }}
+          PYTHON_GIL: 1
+          CIBW_BUILD_VERBOSITY: 3
+          # SCCACHE Notes:
+          # - Without the /project dir and tmpdirs (not sure exactly which mattered), the python environment is installed to a random tmp dir, which breaks
+          # the cache key... so, only the external/duckdb would cache, and not the project itself
+          # - GHA cache is limited to 10GB LRU.
+          # - SCCACHE_BASEDIR is not implemented in sccache (https://github.com/mozilla/sccache/issues/35)
+          # - Using -fdebug-prefix-map/-fmacro-prefix-map for path normalization instead (Mozilla Firefox approach)
+          # - Mozilla bug: https://bugzilla.mozilla.org/show_bug.cgi?id=1524662 "Support gcc/clang-like build path prefix map"
+          # - UV creates random build-env-* dirs causing cache misses (https://github.com/astral-sh/uv/issues/13096)
+          # - Using --no-isolation to eliminate random UV build environments
+          #
+          # SCCACHE_LOG: trace
+          # SCCACHE_LOG_LEVEL: trace
+          # RUST_LOG: trace
+          # SCCACHE_NO_DAEMON: "1"
+          # PYTHONPATH="/project" ("." on mac and windows)
+
+          # UV_NO_BUILD_ISOLATION="true"
+          # no-build-isolation uses the same build-env path for each build, stable paths needed for caching
+          # SCCACHE_BASEDIR="/tmp/duckdb-build"
+          # TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
+          # UV_PROJECT_ENVIRONMENT="/project/.venv"
+
+          #SCCACHE_BASEDIR="/tmp/duckdb-build"
+          #TMPDIR="/tmp/duckdb-build" TEMP="/tmp/duckdb-build"
+          #UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv"
+
+          # SCCACHE_BASEDIR="/tmp/duckdb-build"
+          # TMPDIR="C:/tmp/duckdb-build" TEMP="C:/tmp/duckdb-build"
+          # UV_PROJECT_ENVIRONMENT="C:/project/.venv"
+          #CMAKE_BUILD_TYPE=RelWithDebInfo
+          CIBW_ENVIRONMENT_WINDOWS: >
+            CMAKE_BUILD_TYPE=Release
+            PYTHONPATH="."
+            TMPDIR="C:/tmp/duckdb-build"
+            TEMP="C:/tmp/duckdb-build"
+            CMAKE_ARGS="-DPython3_EXECUTABLE=C:/tmp/duckdb-build/stable-venv/Scripts/python.exe -DPython_EXECUTABLE=C:/tmp/duckdb-build/stable-venv/Scripts/python.exe -DCMAKE_PREFIX_PATH=C:/tmp/duckdb-build/stable-venv"
+          CIBW_ENVIRONMENT_MACOS: >
+            PYTHONPATH="."
+            TMPDIR="/tmp/duckdb-build"
+            TEMP="/tmp/duckdb-build"
+            UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/.venv"
+            CIBW_BUILD_DIR="/tmp/duckdb-build/build"
+            PATH="/tmp/duckdb-build/stable-venv/bin:$PATH"
+            CMAKE_ARGS="-DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DPython_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DCMAKE_PREFIX_PATH=/tmp/duckdb-build/stable-venv"
+          CIBW_ENVIRONMENT_LINUX: >
+            PYTHONPATH="/project"
+            TMPDIR="/tmp/duckdb-build"
+            TEMP="/tmp/duckdb-build"
+            UV_PROJECT_ENVIRONMENT="/tmp/duckdb-build/stable-venv"
+            CMAKE_ARGS="-DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DPython_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DCMAKE_PREFIX_PATH=/tmp/duckdb-build/stable-venv"
+
+          CIBW_ENVIRONMENT_PASS: SCCACHE_GHA_ENABLED ACTIONS_RUNTIME_TOKEN ACTIONS_RESULTS_URL ACTIONS_CACHE_SERVICE_V2 SCCACHE_C_CUSTOM_CACHE_BUSTER SCCACHE_LOG SCCACHE_LOG_LEVEL SCCACHE_NO_DAEMON RUST_LOG SCCACHE_BASEDIR TMPDIR TEMP PIP_CACHE_DIR UV_PROJECT_ENVIRONMENT PYTHONPATH UV_NO_BUILD_ISOLATION UV_CACHE_DIR UV_PYTHON CMAKE_C_COMPILER_LAUNCHER CMAKE_CXX_COMPILER_LAUNCHER CMAKE_VERBOSE_MAKEFILE CIBW_BUILD_FRONTEND PYTHON_GIL CIBW_BUILD_VERBOSITY CIBW_BUILD_DIR VIRTUAL_ENV CMAKE_ARGS
+
+          CIBW_BEFORE_BUILD_LINUX: >
+            if [ "$(uname -m)" = "aarch64" ]; then ARCH=aarch64; else ARCH=x86_64; fi &&
+            curl -L https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-${ARCH}-unknown-linux-musl.tar.gz | tar xz &&
+            cp sccache-v0.10.0-${ARCH}-unknown-linux-musl/sccache /usr/bin &&
+            sccache --show-stats &&
+            mkdir -p /tmp/duckdb-build /tmp/pip-cache &&
+            uv venv /tmp/duckdb-build/stable-venv --python "$(which python)" &&
+            uv pip install --python /tmp/duckdb-build/stable-venv/bin/python 'pybind11[global]>=2.6.0'
+          CIBW_BEFORE_BUILD_MACOS: >
+            mkdir -p /tmp/duckdb-build /tmp/duckdb-build/uv-cache /tmp/pip-cache &&
+            brew install sccache &&
+            rm -f /tmp/duckdb-build/stable-venv &&
+            ln -sf "$VIRTUAL_ENV" /tmp/duckdb-build/stable-venv &&
+            uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10'
+
+          # Build dependencies installs needed if using no-isolation
+          # uv pip install scikit-build-core 'pybind11[global]>=2.6.0' setuptools-scm 'cmake>=3.29.0' 'ninja>=1.10' &&
+          CIBW_BEFORE_BUILD_WINDOWS: >
+            (mkdir "C:\tmp\duckdb-build" 2>nul & mkdir "C:\tmp\duckdb-build\uv-cache" 2>nul & mkdir "C:\tmp\pip-cache" 2>nul) &&
+            del "C:\Strawberry\c\bin\ccache.exe" 2>nul &&
+            sccache --show-stats &&
+            mklink /j "C:\tmp\duckdb-build\stable-venv" "%VIRTUAL_ENV%" &&
+            call "C:\tmp\duckdb-build\stable-venv\Scripts\activate.bat" &&
+            uv pip install "pybind11[global]>=2.6.0"
+            
+          # &&
+          # uv pip install scikit-build-core "pybind11[global]>=2.6.0" setuptools-scm "cmake>=3.29.0" "ninja>=1.10"
+      - name: Upload wheel
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.python }}-${{ matrix.platform.os }}_${{ matrix.platform.arch }}
+          path: wheelhouse/*.whl
+          compression-level: 0
