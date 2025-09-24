@@ -131,8 +131,12 @@ cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
 cmake.define.CMAKE_C_FLAGS_INIT="/Z7"
 cmake.define.CMAKE_CXX_FLAGS_INIT="/Z7"
 cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-build.tool-args = ["/m:4"]
-
+#build.tool-args = ["/m:4"]
+cmake.args = [
+    "-G", "Ninja",
+    "--log-level=DEBUG",
+    "-DCMAKE_BUILD_TYPE=Release"
+]
 
 [[tool.scikit-build.overrides]]
 # Windows Free-Threading
@@ -143,16 +147,12 @@ inherit.cmake.define = "append"
 # /EHsc: Solution for many of the crashes observed on windows
 # /Z7 / Embedded: Needed for sccache
 cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
-cmake.define.CMAKE_C_FLAGS_INIT="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
-cmake.define.CMAKE_CXX_FLAGS_INIT="/DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_C_FLAGS_INIT="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS_INIT="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
 
-build.tool-args = ["/m:4"]
+#build.tool-args = ["/m:4"]
 #, "/verbosity:diagnostic", "/property:UseCommandLineEcho=true"]
-#cmake.args = [
-#    "-G", "Ninja",
-#    "--log-level=DEBUG",
-#    "-DCMAKE_BUILD_TYPE=Release"
-#]
+
 # for msbuild
 
 [tool.scikit-build.sdist]
