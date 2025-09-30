@@ -116,11 +116,11 @@ unique_ptr<DataChunk> DuckDBPyResult::FetchNextRaw(QueryResult &query_result) {
 
 Optional<py::tuple> DuckDBPyResult::Fetchone() {
 	{
-		D_ASSERT(py::gil_check());
 		if (!result) {
 			throw InvalidInputException("result closed");
 		}
 		if (!current_chunk || chunk_offset >= current_chunk->size()) {
+			D_ASSERT(py::gil_check());
 			py::gil_scoped_release release;
 			current_chunk = FetchNext(*result);
 			chunk_offset = 0;
