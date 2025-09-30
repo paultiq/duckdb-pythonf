@@ -114,7 +114,7 @@ if.env.COVERAGE = false
 build-dir = "build/debug/"
 editable.rebuild = true
 editable.mode = "redirect"
-cmake.build-type = "Debug"
+cmake.build-type = "Release"
 
 # Separate override because we have to append to cmake.define with `inherit` in order not to overwrite other defines.
 #   see https://scikit-build-core.readthedocs.io/en/latest/configuration/overrides.html#inheriting-for-tables-and-arrays
@@ -122,12 +122,14 @@ cmake.build-type = "Debug"
 if.state = "editable"
 if.env.COVERAGE = false
 inherit.cmake.define = "append"
-cmake.define.DISABLE_UNITY = "1"
+cmake.define.DISABLE_UNITY = "0"
 
 [[tool.scikit-build.overrides]]
 if.platform-system = "^win32"
 inherit.cmake.define = "append"
-cmake.define.CMAKE_VERBOSE_MAKEFILE = "ON"
+
+# Verbose Makefile breaks sccacheing
+cmake.define.CMAKE_VERBOSE_MAKEFILE = "OFF" 
 cmake.define.CMAKE_C_FLAGS_INIT="/Z7"
 cmake.define.CMAKE_CXX_FLAGS_INIT="/Z7"
 cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
