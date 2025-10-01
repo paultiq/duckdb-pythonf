@@ -69,7 +69,7 @@ jobs:
           git fetch origin
           git checkout ${{ inputs.duckdb-sha }}
       - name: Configure Cache Env
-        if: ${{ env.ACT != 'true' }}
+        # if: ${{ env.ACT != 'true' }}
         uses: actions/github-script@v7
         with:
           script: |
