@@ -12,11 +12,11 @@ jobs:
       matrix:
         python: [ cp39, cp313, cp314t ] # cp39, cp310, cp311, cp312, cp313, cp314t, 
         platform:
-          - { os: windows-2025,     arch: amd64,      cibw_system: win }
+          #- { os: windows-2025,     arch: amd64,      cibw_system: win }
           - { os: ubuntu-latest,     arch: x86_64,     cibw_system: manylinux }
           # - { os: ubuntu-24.04-arm, arch: aarch64,    cibw_system: manylinux }
           #- { os: macos-15,         arch: arm64,      cibw_system: macosx }
-          - { os: macos-26,         arch: arm64,      cibw_system: macosx }
+          #- { os: macos-26,         arch: arm64,      cibw_system: macosx }
           # - { os: macos-15,         arch: universal2, cibw_system: macosx }
           # - { os: macos-13,         arch: x86_64,     cibw_system: macosx }
         #exclude:
@@ -50,9 +50,18 @@ jobs:
       TMPDIR: "/tmp/duckdb-build"
       TEMP: "/tmp/duckdb-build"  
     steps:
+      # idea here from https://github.com/pypa/cibuildwheel/issues/1527
+      - name: Determine CIBW cache path
+        shell: bash
+        run: >
+          ( echo -n 'cache_path='; python3 -c 'import platformdirs; print(platformdirs.user_cache_path(appname="cibuildwheel", appauthor="pypa"))' ) >> "$GITHUB_OUTPUT"
+        id: cibw_cache_info
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.cibw_cache_info.outputs.cache_path }}
+          key: ${{ runner.os }}-cibw
       - name: Set SCCACHE_GHA_ENABLED
         run: echo "SCCACHE_GHA_ENABLED=${{ env.ACT == 'true' && 'off' || 'on' }}" >> $GITHUB_ENV
-
       - name: Checkout DuckDB Python
         if: ${{ env.ACT != 'true' }}
         uses: actions/checkout@v5
@@ -173,6 +182,7 @@ jobs:
             TEMP="C:/tmp/duckdb-build"
             CMAKE_ARGS="-DPython3_EXECUTABLE=C:/tmp/duckdb-build/stable-venv/Scripts/python.exe -DPython_EXECUTABLE=C:/tmp/duckdb-build/stable-venv/Scripts/python.exe -DCMAKE_PREFIX_PATH=C:/tmp/duckdb-build/stable-venv"
           CIBW_ENVIRONMENT_MACOS: >
+            SCCACHE_GHA_ENABLED=true
             PYTHONPATH="."
             TMPDIR="/tmp/duckdb-build"
             TEMP="/tmp/duckdb-build"
@@ -181,6 +191,7 @@ jobs:
             PATH="/tmp/duckdb-build/stable-venv/bin:$PATH"
             CMAKE_ARGS="-DPython3_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DPython_EXECUTABLE=/tmp/duckdb-build/stable-venv/bin/python -DCMAKE_PREFIX_PATH=/tmp/duckdb-build/stable-venv"
           CIBW_ENVIRONMENT_LINUX: >
+            SCCACHE_GHA_ENABLED=true
             PYTHONPATH="/project"
             TMPDIR="/tmp/duckdb-build"
             TEMP="/tmp/duckdb-build"
