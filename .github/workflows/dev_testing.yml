@@ -166,6 +166,7 @@ jobs:
           # UV_PROJECT_ENVIRONMENT="C:/project/.venv"
           #CMAKE_BUILD_TYPE=RelWithDebInfo
           CIBW_ENVIRONMENT_WINDOWS: >
+            SCCACHE_GHA_ENABLED=true
             CMAKE_BUILD_TYPE=Release
             PYTHONPATH="."
             TMPDIR="C:/tmp/duckdb-build"
