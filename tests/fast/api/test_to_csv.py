@@ -286,7 +286,7 @@ class TestToCSV(object):
         csv_rel = default_con.sql(
             f"""FROM read_csv_auto('{temp_file_name}/*/*.csv', hive_partitioning=TRUE, header=TRUE) order by all;"""
         )
-        res = default_con.sql("FROM rel order by all")
+        res = default_con.sql("FROM rel7 order by all")
         assert res.execute().fetchall() == csv_rel.execute().fetchall()
 
     @pytest.mark.parametrize("pandas", [NumpyPandas(), ArrowPandas()])
