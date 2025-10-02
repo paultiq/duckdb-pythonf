@@ -46,6 +46,10 @@ else()
 endif()
 duckdb_add_library(duckdb_target)
 
+# Use unity for the external duckdb_target
+set_target_properties(duckdb_target PROPERTIES UNITY_BUILD ON UNITY_BUILD_BATCH_SIZE 32)
+
+
 # Bundle in INTERFACE library
 add_library(_duckdb_dependencies INTERFACE)
 target_link_libraries(_duckdb_dependencies INTERFACE
@@ -77,6 +81,9 @@ pybind11_add_module(_duckdb
         $<TARGET_OBJECTS:python_relation>
         $<TARGET_OBJECTS:python_type>
 )
+# don't use unity for the duckdb-python code - we just want one file per target
+set_target_properties(_duckdb PROPERTIES UNITY_BUILD OFF) 
+
 # add _duckdb_dependencies
 target_link_libraries(_duckdb PRIVATE _duckdb_dependencies)
 
