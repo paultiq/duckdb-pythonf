@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 import duckdb
-import pyarrow as pa
+import pytest
 from duckdb.functional import PythonTVFType
 
 
 def test_arrow_small(tmp_path):
+    pa = pytest.importorskip("pyarrow")
+
     with duckdb.connect(tmp_path / "test.duckdb") as conn:
 
         def simple_arrow_generator(count: int = 5):
@@ -36,6 +38,8 @@ def test_arrow_small(tmp_path):
 
 
 def test_arrow_large(tmp_path):
+    pa = pytest.importorskip("pyarrow")
+
     """Tests a 1M row Arrow table with different data types"""
     with duckdb.connect(tmp_path / "test.duckdb") as conn:
         n = 2048 * 1000
