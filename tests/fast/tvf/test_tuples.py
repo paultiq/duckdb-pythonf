@@ -76,53 +76,6 @@ def test_simple_large_fetchall(tmp_path, gen_function):
 
 
 @pytest.mark.parametrize("gen_function", [simple_generator])
-def test_simple_large_arrow(tmp_path, gen_function):
-    count = 2048 * 1000
-    with duckdb.connect(tmp_path / "test.duckdb") as conn:
-        schema = [["name", "VARCHAR"], ["id", "INT"]]
-
-        conn.create_table_function(
-            name="gen_function",
-            callable=gen_function,
-            parameters=None,
-            schema=schema,
-            type="tuples",
-        )
-
-        result = conn.sql(
-            "SELECT * FROM gen_function(?)",
-            params=(count,),
-        ).fetch_arrow_table()
-
-        assert len(result) == count
-
-
-@pytest.mark.parametrize("gen_function", [simple_generator])
-def test_simple_large_arrowbatched(tmp_path, gen_function):
-    count = 2048 * 1000
-    with duckdb.connect(tmp_path / "test.duckdb") as conn:
-        schema = [["name", "VARCHAR"], ["id", "INT"]]
-
-        conn.create_table_function(
-            name="gen_function",
-            callable=gen_function,
-            parameters=None,
-            schema=schema,
-            type="tuples",
-        )
-
-        result = conn.sql(
-            "SELECT * FROM gen_function(?)",
-            params=(count,),
-        ).fetch_arrow_reader()
-
-        c = 0
-        for batch in result:
-            c += batch.num_rows
-        assert c == count
-
-
-@pytest.mark.parametrize("gen_function", [simple_generator])
 def test_simple_large_df(tmp_path, gen_function):
     count = 2048 * 1000
     with duckdb.connect(tmp_path / "test.duckdb") as conn:
@@ -213,7 +166,7 @@ def test_kwargs(tmp_path):
             callable=simple_pylist,
             parameters=["count"],
             schema=[["name", "VARCHAR"], ["id", "INT"]],
-            type="tuples",  # tuples | arrow
+            type="tuples",
         )
         result = conn.sql("SELECT * FROM simple_pylist(3)").fetchall()
         assert result[-1][0] == "name_2_10"

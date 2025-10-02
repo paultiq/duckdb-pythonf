@@ -3,6 +3,12 @@
 import duckdb
 import pytest
 from duckdb.functional import PythonTVFType
+from typing import Iterator
+
+
+def simple_generator(count: int = 10) -> Iterator[tuple[str, int]]:
+    for i in range(count):
+        yield (f"name_{i}", i)
 
 
 def test_arrow_small(tmp_path):
@@ -80,3 +86,54 @@ def test_arrow_large(tmp_path):
         ).fetchone()
         expected_sum = sum(i * 2 for i in range(n))
         assert result[0] == expected_sum
+
+
+@pytest.mark.parametrize("gen_function", [simple_generator])
+def test_simple_large_arrow(tmp_path, gen_function):
+    pa = pytest.importorskip("pyarrow")
+
+    count = 2048 * 1000
+    with duckdb.connect(tmp_path / "test.duckdb") as conn:
+        schema = [["name", "VARCHAR"], ["id", "INT"]]
+
+        conn.create_table_function(
+            name="gen_function",
+            callable=gen_function,
+            parameters=None,
+            schema=schema,
+            type="tuples",
+        )
+
+        result = conn.sql(
+            "SELECT * FROM gen_function(?)",
+            params=(count,),
+        ).fetch_arrow_table()
+
+        assert len(result) == count
+
+
+@pytest.mark.parametrize("gen_function", [simple_generator])
+def test_simple_large_arrowbatched(tmp_path, gen_function):
+    pa = pytest.importorskip("pyarrow")
+
+    count = 2048 * 1000
+    with duckdb.connect(tmp_path / "test.duckdb") as conn:
+        schema = [["name", "VARCHAR"], ["id", "INT"]]
+
+        conn.create_table_function(
+            name="gen_function",
+            callable=gen_function,
+            parameters=None,
+            schema=schema,
+            type="tuples",
+        )
+
+        result = conn.sql(
+            "SELECT * FROM gen_function(?)",
+            params=(count,),
+        ).fetch_arrow_reader()
+
+        c = 0
+        for batch in result:
+            c += batch.num_rows
+        assert c == count
