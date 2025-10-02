@@ -46,7 +46,7 @@ all = [ # users can install duckdb with 'duckdb[all]', which will install this l
     "ipython", # used in duckdb.query_graph
     "fsspec",  # used in duckdb.filesystem
     "numpy",   # used in duckdb.experimental.spark and in duckdb.fetchnumpy()
-    "pandas; python_version < '3.14'",  # used for pandas dataframes all over the place
+    "pandas",  # used for pandas dataframes all over the place
     "pyarrow; python_version < '3.14'", # used for pyarrow support
     "adbc_driver_manager; python_version < '3.14'", # for the adbc driver (TODO: this should live under the duckdb package)
 ]
@@ -73,6 +73,7 @@ cmake.version = ">=3.29.0"
 ninja.version = ">=1.10"
 ninja.make-fallback = false
 metadata.version.provider = "scikit_build_core.metadata.setuptools_scm"
+#build.tool-args = ["-v", "-d", "stats"]
 
 [tool.scikit-build.wheel]
 cmake = true
@@ -122,6 +123,39 @@ if.state = "editable"
 if.env.COVERAGE = false
 inherit.cmake.define = "append"
 cmake.define.DISABLE_UNITY = "1"
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "^win32"
+inherit.cmake.define = "append"
+
+# Verbose Makefile breaks sccacheing
+cmake.define.CMAKE_VERBOSE_MAKEFILE = "OFF" 
+cmake.define.CMAKE_C_FLAGS_INIT="/Z7"
+cmake.define.CMAKE_CXX_FLAGS_INIT="/Z7"
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+#build.tool-args = ["/m:4"]
+cmake.args = [
+    "-G", "Ninja",
+    "--log-level=DEBUG",
+    "-DCMAKE_BUILD_TYPE=Release"
+]
+
+[[tool.scikit-build.overrides]]
+# Windows Free-Threading
+if.platform-system = "^win32"
+if.abi-flags = "t"
+inherit.cmake.define = "append"
+# cmake.build-type = "RelWithDebInfo"
+# /EHsc: Solution for many of the crashes observed on windows
+# /Z7 / Embedded: Needed for sccache
+cmake.define.CMAKE_MSVC_DEBUG_INFORMATION_FORMAT="Embedded"
+cmake.define.CMAKE_C_FLAGS_INIT="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+cmake.define.CMAKE_CXX_FLAGS_INIT="/Z7 /DPy_MOD_GIL_USED /DPy_GIL_DISABLED"
+
+#build.tool-args = ["/m:4"]
+#, "/verbosity:diagnostic", "/property:UseCommandLineEcho=true"]
+
+# for msbuild
 
 [tool.scikit-build.sdist]
 include = [
@@ -219,7 +253,7 @@ torchvision = [ { index = "pytorch-cpu" } ]
 [dependency-groups] # used for development only, requires pip >=25.1.0
 stubdeps = [ # dependencies used for typehints in the stubs
     "fsspec",
-    "pandas; python_version < '3.14'",
+    "pandas",
     "polars; python_version < '3.14'",
     "pyarrow; python_version < '3.14'",
 ]
@@ -227,6 +261,8 @@ test = [ # dependencies used for running tests
     "pytest",
     "pytest-reraise",
     "pytest-timeout",
+    "pytest-xdist", #  multi-processed tests, if `-n <num_workers> | auto`
+    "pytest-randomly", # randomizes test order to ensure no test dependencies, enabled on install
     "mypy",
     "coverage",
     "gcovr; python_version < '3.14'",
@@ -241,7 +277,7 @@ test = [ # dependencies used for running tests
     "requests",
     "urllib3",
     "fsspec>=2022.11.0",
-    "pandas>=2.0.0; python_version < '3.14'",
+    "pandas>=2.0.0",
     "pyarrow>=18.0.0; python_version < '3.14'",
     "torch>=2.2.2; python_version < '3.14' and (sys_platform != 'darwin' or platform_machine != 'x86_64' or python_version < '3.13')",
     "tensorflow==2.14.0; sys_platform == 'darwin' and python_version < '3.12'",
@@ -256,7 +292,7 @@ scripts = [ # dependencies used for running scripts
     "ipython",
     "ipywidgets",
     "numpy",
-    "pandas; python_version < '3.14'",
+    "pandas",
     "pcpp",
     "polars; python_version < '3.14'",
     "pyarrow; python_version < '3.14'",
@@ -306,6 +342,7 @@ filterwarnings = [
     "ignore:distutils Version classes are deprecated:DeprecationWarning",
     "ignore:is_datetime64tz_dtype is deprecated:DeprecationWarning",
 ]
+timeout = 600  # don't let individual tests "hang"
 
 [tool.coverage.run]
 branch = true
@@ -388,4 +425,5 @@ before-build = ["yum install -y ccache"]
 before-build = ["brew install ccache"]
 
 [tool.cibuildwheel.windows]
-before-build = ["choco install ccache"]
+# Strawberry ccache is already installed on the cibuildwheel images
+before-build = []
