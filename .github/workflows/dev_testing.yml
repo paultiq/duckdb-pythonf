@@ -1,5 +1,7 @@
 name: On Push Fast Tests
-on: push
+on:
+  push:
+  workflow_dispatch:
 
 # This workflow is runnable locally for debugging:
 # using https://github.com/nektos/act
