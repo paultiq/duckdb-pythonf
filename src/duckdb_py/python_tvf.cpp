@@ -9,6 +9,7 @@
 #include "duckdb/parser/tableref/table_function_ref.hpp"
 #include "duckdb_python/python_conversion.hpp"
 #include "duckdb_python/python_objects.hpp"
+#include "duckdb_python/pybind11/python_object_container.hpp"
 
 namespace duckdb {
 
@@ -38,28 +39,26 @@ struct PyTVFBindData : public TableFunctionData {
 	named_parameter_map_t kwargs;
 	vector<LogicalType> return_types;
 	vector<string> return_names;
-	py::function callable;
+	PythonObjectContainer python_objects; // Holds the callable
 
 	PyTVFBindData(string func_name, vector<Value> args, named_parameter_map_t kwargs, vector<LogicalType> return_types,
 	              vector<string> return_names, py::function callable)
 	    : func_name(std::move(func_name)), args(std::move(args)), kwargs(std::move(kwargs)),
-	      return_types(std::move(return_types)), return_names(std::move(return_names)), callable(std::move(callable)) {
+	      return_types(std::move(return_types)), return_names(std::move(return_names)) {
+		// Store callable in container (GIL acquired inside Push)
+		python_objects.Push(std::move(callable));
 	}
 };
 
 struct PyTVFTuplesGlobalState : public GlobalTableFunctionState {
 	// TUPLES streaming iterator consumption
-	Optional<py::object> python_iterator;
+	PythonObjectContainer python_objects;
 	bool iterator_exhausted = false;
 
-	PyTVFTuplesGlobalState() : python_iterator(py::none()), iterator_exhausted(false) {
-	}
-
-	~PyTVFTuplesGlobalState() {
-		py::gil_scoped_acquire gil;
-		if (!python_iterator.is_none()) {
-			python_iterator = py::none();
-		}
+	PyTVFTuplesGlobalState() : iterator_exhausted(false) {
+		printf("[PyTVFTuplesGlobalState] Constructor called\n");
+		fflush(stdout);
+		// python_iterator will be set in PyTVFTuplesInitGlobal under GIL
 	}
 };
 
@@ -67,17 +66,11 @@ struct PyTVFArrowGlobalState : public GlobalTableFunctionState {
 	unique_ptr<PythonTableArrowArrayStreamFactory> arrow_factory;
 	unique_ptr<FunctionData> arrow_bind_data;
 	unique_ptr<GlobalTableFunctionState> arrow_global_state;
-	Optional<py::object> arrow_result; // Keep Python object alive
-	idx_t num_columns;                 // Number of columns in Arrow table
+	PythonObjectContainer python_objects; // Keep Python object alive
+	idx_t num_columns;                    // Number of columns in Arrow table
 
-	PyTVFArrowGlobalState() : arrow_result(py::none()) {
-	}
-
-	~PyTVFArrowGlobalState() {
-		py::gil_scoped_acquire gil;
-		if (!arrow_result.is_none()) {
-			arrow_result = py::none();
-		}
+	PyTVFArrowGlobalState() {
+		// arrow_result will be set in PyTVFArrowInitGlobal under GIL
 	}
 };
 
@@ -85,13 +78,13 @@ static void PyTVFTuplesScanFunction(ClientContext &context, TableFunctionInput &
 	auto &gs = input.global_state->Cast<PyTVFTuplesGlobalState>();
 	auto &bd = input.bind_data->Cast<PyTVFBindData>();
 
-	if (gs.iterator_exhausted || gs.python_iterator.is_none()) {
+	if (gs.iterator_exhausted) {
 		output.SetCardinality(0);
 		return;
 	}
 
 	py::gil_scoped_acquire gil;
-	auto &it = gs.python_iterator;
+	auto &it = gs.python_objects.LastAddedObject();
 
 	idx_t row_idx = 0;
 	for (idx_t i = 0; i < STANDARD_VECTOR_SIZE; i++) {
@@ -155,6 +148,8 @@ static unique_ptr<PyTVFBindData> PyTVFBindInternal(ClientContext &context, Table
 	return_types = tvf_info.return_types;
 	return_names = tvf_info.return_names;
 
+	// Acquire GIL before copying py::function
+	py::gil_scoped_acquire gil;
 	return make_uniq<PyTVFBindData>(in.table_function.name, in.inputs, in.named_parameters, return_types, return_names,
 	                                tvf_info.callable);
 }
@@ -173,7 +168,7 @@ static unique_ptr<FunctionData> PyTVFArrowBindFunction(ClientContext &context, T
 	return std::move(bd);
 }
 
-static py::object CallPythonTVF(ClientContext &context, const PyTVFBindData &bd) {
+static py::object CallPythonTVF(ClientContext &context, PyTVFBindData &bd) {
 	py::gil_scoped_acquire gil;
 
 	// Build positional arguments
@@ -188,8 +183,9 @@ static py::object CallPythonTVF(ClientContext &context, const PyTVFBindData &bd)
 		kwargs[py::str(kv.first)] = PythonObject::FromValue(kv.second, kv.second.type(), context.GetClientProperties());
 	}
 
-	// Call Python function
-	py::object result = bd.callable(*args, **kwargs);
+	// Call Python function (callable is stored in python_objects)
+	auto &callable = bd.python_objects.LastAddedObject();
+	py::object result = callable(*args, **kwargs);
 
 	if (result.is_none()) {
 		throw InvalidInputException("Table function '%s' returned None, expected iterable or Arrow table",
@@ -203,15 +199,17 @@ static unique_ptr<GlobalTableFunctionState> PyTVFTuplesInitGlobal(ClientContext 
 	auto &bd = in.bind_data->Cast<PyTVFBindData>();
 	auto gs = make_uniq<PyTVFTuplesGlobalState>();
 
-	py::object result = CallPythonTVF(context, bd);
-
-	py::gil_scoped_acquire gil;
-	try {
-		py::iterator it = py::iter(result);
-		gs->python_iterator = it;
-		gs->iterator_exhausted = false;
-	} catch (const py::error_already_set &e) {
-		throw InvalidInputException("Table function '%s' returned non-iterable result: %s", bd.func_name, e.what());
+	{
+		py::gil_scoped_acquire gil;
+		// const_cast is safe here - we only read from python_objects, not modify bind_data structure
+		py::object result = CallPythonTVF(context, const_cast<PyTVFBindData &>(bd));
+		try {
+			py::iterator it = py::iter(result);
+			gs->python_objects.Push(std::move(it));
+			gs->iterator_exhausted = false;
+		} catch (const py::error_already_set &e) {
+			throw InvalidInputException("Table function '%s' returned non-iterable result: %s", bd.func_name, e.what());
+		}
 	}
 
 	return std::move(gs);
@@ -221,14 +219,18 @@ static unique_ptr<GlobalTableFunctionState> PyTVFArrowInitGlobal(ClientContext &
 	auto &bd = in.bind_data->Cast<PyTVFBindData>();
 	auto gs = make_uniq<PyTVFArrowGlobalState>();
 
-	py::object result = CallPythonTVF(context, bd);
-	PyObject *ptr = result.ptr();
+	{
+		py::gil_scoped_acquire gil;
+		// const_cast is safe here - we only read from python_objects, not modify bind_data structure
+		py::object result = CallPythonTVF(context, const_cast<PyTVFBindData &>(bd));
+		PyObject *ptr = result.ptr();
 
-	// TODO: Should we verify this is an arrow table, or just fail later
-	gs->arrow_result = result;
+		// TODO: Should we verify this is an arrow table, or just fail later
+		gs->python_objects.Push(std::move(result));
 
-	gs->arrow_factory =
-	    make_uniq<PythonTableArrowArrayStreamFactory>(ptr, context.GetClientProperties(), DBConfig::GetConfig(context));
+		gs->arrow_factory = make_uniq<PythonTableArrowArrayStreamFactory>(ptr, context.GetClientProperties(),
+		                                                                  DBConfig::GetConfig(context));
+	}
 
 	// Build bind input for Arrow scan
 	vector<Value> children;

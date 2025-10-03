@@ -255,3 +255,44 @@ def test_error(tmp_path):
 
         with pytest.raises(Exception):
             conn.execute("SELECT * FROM error_tvf()").fetchall()
+
+
+def test_callable_refcount(tmp_path):
+    import sys
+
+    def gen_function(n):
+        return [(f"name_{i}", i) for i in range(n)]
+
+    initial_refcount = sys.getrefcount(gen_function)
+
+    with duckdb.connect(tmp_path / "test.duckdb") as conn:
+        schema = [["name", "VARCHAR"], ["id", "INT"]]
+
+        conn.create_table_function(
+            name="gen_function",
+            callable=gen_function,
+            schema=schema,
+            type="tuples",
+        )
+
+        after_register_refcount = sys.getrefcount(gen_function)
+        assert after_register_refcount > initial_refcount, (
+            f"Expected refcount to increase after registration, "
+            f"but got {after_register_refcount} (initial: {initial_refcount})"
+        )
+
+        for _ in range(3):
+            result = conn.sql("SELECT * FROM gen_function(5)").fetchall()
+            assert len(result) == 5
+
+        after_execution_refcount = sys.getrefcount(gen_function)
+        assert after_execution_refcount == after_register_refcount, (
+            f"Expected refcount to remain stable after execution, "
+            f"but got {after_execution_refcount} (after register: {after_register_refcount})"
+        )
+
+    final_refcount = sys.getrefcount(gen_function)
+    assert final_refcount == initial_refcount, (
+        f"Expected refcount to return to initial after unregistration, "
+        f"but got {final_refcount} (initial: {initial_refcount})"
+    )

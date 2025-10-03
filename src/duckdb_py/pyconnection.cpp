@@ -1889,6 +1889,7 @@ void DuckDBPyConnection::Close() {
 	// https://peps.python.org/pep-0249/#Connection.close
 	cursors.ClearCursors();
 	registered_functions.clear();
+	registered_table_functions.clear();
 }
 
 void DuckDBPyConnection::Interrupt() {
