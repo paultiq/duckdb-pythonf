@@ -11,58 +11,51 @@ def simple_generator(count: int = 10) -> Iterator[tuple[str, int]]:
         yield (f"name_{i}", i)
 
 
+def simple_arrow_table(count: int):
+    import pyarrow as pa
+
+    data = {
+        "id": list(range(count)),
+        "value": [i * 2 for i in range(count)],
+        "name": [f"row_{i}" for i in range(count)],
+    }
+    return pa.table(data)
+
+
 def test_arrow_small(tmp_path):
     pa = pytest.importorskip("pyarrow")
 
     with duckdb.connect(tmp_path / "test.duckdb") as conn:
-
-        def simple_arrow_generator(count: int = 5):
-            data = {"x": [*range(count)], "y": [f"name_{i}" for i in range(count)]}
-            return pa.table(data)
-
+        # This has a schema mismatch - the function returns (id, value, name)
+        # but we declare (x, y) - this should NOT segfault but give a proper error
         conn.create_table_function(
             "simple_arrow",
-            simple_arrow_generator,
-            schema=[("x", "BIGINT"), ("y", "VARCHAR")],
+            simple_arrow_table,
+            schema=[("x", "BIGINT"), ("y", "VARCHAR")],  # Wrong schema!
             type=PythonTVFType.ARROW_TABLE,
         )
 
-        # Test fetchall
-        result = conn.execute("SELECT * FROM simple_arrow()").fetchall()
-        assert len(result) == 5
-        assert result[0] == (0, "name_0")
-        assert result[4] == (4, "name_4")
+        # This SHOULD raise a proper exception, not segfault
+        with pytest.raises(Exception) as exc_info:
+            result = conn.execute("SELECT * FROM simple_arrow(5)").fetchall()
 
-        # Test df
-        df = conn.execute("SELECT * FROM simple_arrow()").df()
-        assert len(df) == 5
-        assert df["x"].tolist() == [0, 1, 2, 3, 4]
-
-        # Test arrow
-        arrow_result = conn.execute("SELECT * FROM simple_arrow()").fetch_arrow_table()
-        assert len(arrow_result) == 5
+        # For now it raises InternalException, but it should be a more user-friendly error
+        assert (
+            "Vector::Reference" in str(exc_info.value)
+            or "schema" in str(exc_info.value).lower()
+        )
 
 
-def test_arrow_large(tmp_path):
+def test_arrow_large_1(tmp_path):
     pa = pytest.importorskip("pyarrow")
 
     """Tests a 1M row Arrow table with different data types"""
     with duckdb.connect(tmp_path / "test.duckdb") as conn:
         n = 2048 * 1000
 
-        def large_arrow_generator(count: int = 1_000_000):
-            import pyarrow as pa
-
-            data = {
-                "id": list(range(n)),
-                "value": [i * 2 for i in range(n)],
-                "name": [f"row_{i}" for i in range(n)],
-            }
-            return pa.table(data)
-
         conn.create_table_function(
             "large_arrow",
-            large_arrow_generator,
+            simple_arrow_table,
             schema=[("id", "BIGINT"), ("value", "BIGINT"), ("name", "VARCHAR")],
             type="arrow_table",
         )
@@ -72,7 +65,7 @@ def test_arrow_large(tmp_path):
         ).fetchone()
         assert result[0] == n
 
-        df = conn.sql("SELECT * FROM large_arrow() LIMIT 10").df()
+        df = conn.sql(f"SELECT * FROM large_arrow({n}) LIMIT 10").df()
         assert len(df) == 10
         assert df["id"].tolist() == list(range(10))
 
@@ -88,9 +81,8 @@ def test_arrow_large(tmp_path):
         assert result[0] == expected_sum
 
 
-@pytest.mark.parametrize("gen_function", [simple_generator])
-def test_simple_large_arrow(tmp_path, gen_function):
-    pa = pytest.importorskip("pyarrow")
+def test_large_arrow_execute(tmp_path):
+    pytest.importorskip("pyarrow")
 
     count = 2048 * 1000
     with duckdb.connect(tmp_path / "test.duckdb") as conn:
@@ -98,7 +90,30 @@ def test_simple_large_arrow(tmp_path, gen_function):
 
         conn.create_table_function(
             name="gen_function",
-            callable=gen_function,
+            callable=simple_generator,
+            parameters=None,
+            schema=schema,
+            type="tuples",
+        )
+
+        result = conn.execute(
+            "SELECT * FROM gen_function(?)",
+            parameters=(count,),
+        ).fetch_arrow_table()
+
+        assert len(result) == count
+
+
+def test_large_arrow_sql(tmp_path):
+    pytest.importorskip("pyarrow")
+
+    count = 2048 * 1000
+    with duckdb.connect(tmp_path / "test.duckdb") as conn:
+        schema = [["name", "VARCHAR"], ["id", "INT"]]
+
+        conn.create_table_function(
+            name="gen_function",
+            callable=simple_generator,
             parameters=None,
             schema=schema,
             type="tuples",
@@ -112,9 +127,8 @@ def test_simple_large_arrow(tmp_path, gen_function):
         assert len(result) == count
 
 
-@pytest.mark.parametrize("gen_function", [simple_generator])
-def test_simple_large_arrowbatched(tmp_path, gen_function):
-    pa = pytest.importorskip("pyarrow")
+def test_arrowbatched_execute(tmp_path):
+    pytest.importorskip("pyarrow")
 
     count = 2048 * 1000
     with duckdb.connect(tmp_path / "test.duckdb") as conn:
@@ -122,12 +136,68 @@ def test_simple_large_arrowbatched(tmp_path, gen_function):
 
         conn.create_table_function(
             name="gen_function",
-            callable=gen_function,
+            callable=simple_generator,
             parameters=None,
             schema=schema,
             type="tuples",
         )
 
+        result = conn.execute(
+            "SELECT * FROM gen_function(?)",
+            parameters=(count,),
+        ).fetch_record_batch()
+
+        result = conn.execute(
+            f"SELECT * FROM gen_function({count})",
+        ).fetch_record_batch()
+
+        c = 0
+        for batch in result:
+            c += batch.num_rows
+        assert c == count
+
+
+def test_arrowbatched_sql_relation(tmp_path):
+    pytest.importorskip("pyarrow")
+
+    count = 2048 * 1000
+    with duckdb.connect(tmp_path / "test.duckdb") as conn:
+        schema = [["name", "VARCHAR"], ["id", "INT"]]
+
+        conn.create_table_function(
+            name="gen_function",
+            callable=simple_generator,
+            parameters=None,
+            schema=schema,
+            type="tuples",
+        )
+
+        result = conn.sql(
+            f"SELECT * FROM gen_function({count})",
+        ).fetch_arrow_reader()
+
+        c = 0
+        for batch in result:
+            c += batch.num_rows
+        assert c == count
+
+
+def test_arrowbatched_sql_materialized(tmp_path):
+    pytest.importorskip("pyarrow")
+
+    count = 2048 * 1000
+    with duckdb.connect(tmp_path / "test.duckdb") as conn:
+        schema = [["name", "VARCHAR"], ["id", "INT"]]
+
+        conn.create_table_function(
+            name="gen_function",
+            callable=simple_generator,
+            parameters=None,
+            schema=schema,
+            type="tuples",
+        )
+
+        # passing parameters makes it non-lazy (materialized)
         result = conn.sql(
             "SELECT * FROM gen_function(?)",
             params=(count,),

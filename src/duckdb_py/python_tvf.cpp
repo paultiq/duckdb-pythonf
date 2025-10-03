@@ -252,6 +252,23 @@ static unique_ptr<GlobalTableFunctionState> PyTVFArrowInitGlobal(ClientContext &
 	vector<string> return_names;
 	gs->arrow_bind_data = ArrowTableFunction::ArrowScanBind(context, bind_input, return_types, return_names);
 
+	// Validate Arrow schema matches declared
+	if (return_types.size() != bd.return_types.size()) {
+		throw InvalidInputException("Schema mismatch in table function '%s': "
+		                            "Arrow table has %lu columns but %lu were declared",
+		                            bd.func_name, return_types.size(), bd.return_types.size());
+	}
+
+	// Check column types match
+	for (idx_t i = 0; i < return_types.size(); i++) {
+		if (return_types[i] != bd.return_types[i]) {
+			throw InvalidInputException("Schema mismatch in table function '%s' at column %lu: "
+			                            "Arrow table has type %s but %s was declared",
+			                            bd.func_name, i, return_types[i].ToString().c_str(),
+			                            bd.return_types[i].ToString().c_str());
+		}
+	}
+
 	gs->num_columns = return_types.size();
 	vector<column_t> all_columns;
 	for (idx_t i = 0; i < gs->num_columns; i++) {
