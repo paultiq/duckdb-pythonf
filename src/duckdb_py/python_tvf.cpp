@@ -56,9 +56,6 @@ struct PyTVFTuplesGlobalState : public GlobalTableFunctionState {
 	bool iterator_exhausted = false;
 
 	PyTVFTuplesGlobalState() : iterator_exhausted(false) {
-		printf("[PyTVFTuplesGlobalState] Constructor called\n");
-		fflush(stdout);
-		// python_iterator will be set in PyTVFTuplesInitGlobal under GIL
 	}
 };
 
@@ -70,7 +67,6 @@ struct PyTVFArrowGlobalState : public GlobalTableFunctionState {
 	idx_t num_columns;                    // Number of columns in Arrow table
 
 	PyTVFArrowGlobalState() {
-		// arrow_result will be set in PyTVFArrowInitGlobal under GIL
 	}
 };
 
