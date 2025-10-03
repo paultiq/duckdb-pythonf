@@ -52,9 +52,7 @@ struct PyTVFTuplesGlobalState : public GlobalTableFunctionState {
 	Optional<py::object> python_iterator;
 	bool iterator_exhausted = false;
 
-	PyTVFTuplesGlobalState() {
-		python_iterator = py::none();
-		iterator_exhausted = false;
+	PyTVFTuplesGlobalState() : python_iterator(py::none()), iterator_exhausted(false) {
 	}
 
 	~PyTVFTuplesGlobalState() {
@@ -72,7 +70,8 @@ struct PyTVFArrowGlobalState : public GlobalTableFunctionState {
 	Optional<py::object> arrow_result; // Keep Python object alive
 	idx_t num_columns;                 // Number of columns in Arrow table
 
-	PyTVFArrowGlobalState() = default;
+	PyTVFArrowGlobalState() : arrow_result(py::none()) {
+	}
 
 	~PyTVFArrowGlobalState() {
 		py::gil_scoped_acquire gil;
